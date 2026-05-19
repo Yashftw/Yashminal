@@ -75,7 +75,7 @@ const CrimsonTerminal = () => {
 
   return (
     <>
-      <PanelWrapper title="YASHMINAL">
+      <PanelWrapper title="CYAN CONSOLE">
         <div
           ref={scrollRef}
           className="h-40 overflow-y-auto font-terminal text-sm space-y-1 mb-3 scrollbar-thin"

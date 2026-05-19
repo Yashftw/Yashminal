@@ -8,55 +8,64 @@ interface Project {
   status: string;
   techStack: string[];
   details: string;
+  githubUrl?: string;
+  websiteUrl?: string;
 }
 
 const projects: Project[] = [
   {
-    id: "PROTOCOL_01",
-    name: "AI-BASED SENTIMENT ANALYSIS",
-    status: "OPERATIONAL",
-    techStack: ["Python", "NLP", "Machine Learning"],
-    description: "Sentiment analysis system for classifying text across multiple languages and domains.",
-    details: "Architecture: Data preprocessing + model training/inference pipeline with evaluation loops; designed for easy dataset swaps and fast iteration.",
-  },
-  {
-    id: "PROTOCOL_02",
-    name: "CHROME EXTENSION — TUBESHELF",
+    id: "PROJ_01",
+    name: "BRAIN BLOX",
     status: "STABLE",
-    techStack: ["JavaScript", "Chrome APIs", "HTML", "CSS"],
-    description: "Chrome extension to organize and save YouTube content for later, with quick categorization.",
-    details: "Architecture: Manifest V3 extension with background service worker + storage sync; lightweight UI for fast save, search, and shelf management.",
+    techStack: ["React", "TypeScript", "Tailwind", "Supabase", "Gemini AI"],
+    description: "An AI-powered flashcard study platform with FSRS scheduling.",
+    details: "Automated PDF-to-flashcard generation using Gemini AI, with spaced repetition scheduling for optimal learning.",
+    githubUrl: "https://github.com/Yashftw/Brainblox",
+    websiteUrl: "https://pixel-perfect-vision-cuemath-flashc-opal.vercel.app/"
   },
   {
-    id: "PROTOCOL_03",
-    name: "MULTI-CLOUD COST DASHBOARD",
+    id: "PROJ_02",
+    name: "3 AM PROGRESS TRACKER",
+    status: "STABLE",
+    techStack: ["React", "Firebase", "PWA"],
+    description: "A minimalist, dark-mode journal and expense tracking application.",
+    details: "Focuses on clean UI, budget management, and secure offline-capable data synchronization across devices.",
+    githubUrl: "https://github.com/Yashftw/3am",
+    websiteUrl: "https://3am-seven.vercel.app/"
+  },
+  {
+    id: "PROJ_03",
+    name: "HELP ME FIX IT",
+    status: "STABLE",
+    techStack: ["React", "Node.js", "WebRTC"],
+    description: "Real-time collaborative troubleshooting platform.",
+    details: "Allows users to connect and resolve hardware/software issues via live communication tools.",
+    githubUrl: "https://github.com/Yashftw/Helpmefixit-production",
+    websiteUrl: "https://helpmefixit-production.vercel.app/"
+  },
+  {
+    id: "PROJ_04",
+    name: "FACE AUTHENTICATION SYSTEM",
     status: "OPERATIONAL",
+    techStack: ["Python", "OpenCV", "Machine Learning"],
+    description: "An AI-powered attendance system using facial recognition.",
+    details: "Automates attendance tracking with high accuracy face detection and matching models.",
+    githubUrl: "https://github.com/Yashftw/face-authentication-attendance-system"
+  },
+  {
+    id: "PROJ_05",
+    name: "MULTI CLOUD COST DASHBOARD",
+    status: "WORK IN PROGRESS",
     techStack: ["Azure", "AWS", "GCP", "React", "Node.js"],
     description: "Cost visibility dashboard aggregating spend across Azure/AWS/GCP with anomaly signals.",
-    details: "Architecture: REST-based aggregation service + dashboard UI; structured data pipeline for cross-cloud normalization and monthly trend analysis.",
-  },
-  {
-    id: "PROTOCOL_04",
-    name: "SERVERLESS DOCUMENT INTELLIGENCE PIPELINE",
-    status: "DEPLOYED",
-    techStack: ["Azure Functions", "AWS Lambda", "OCR", "NLP"],
-    description: "Serverless pipeline for extracting structured data from documents using OCR + NLP.",
-    details: "Architecture: Event-driven ingestion (blob/S3 triggers) → OCR/NLP extraction → structured output; built for throughput and low ops overhead.",
-  },
-  {
-    id: "PROTOCOL_05",
-    name: "OFFLINE SURVIVAL AI ASSISTANT (RAG + SMALL LLM)",
-    status: "TESTING",
-    techStack: ["Python", "RAG", "Vector Search", "Small LLM"],
-    description: "Offline-first assistant designed for low-connectivity scenarios using retrieval-augmented generation.",
-    details: "Architecture: Local document indexing + retrieval layer feeding a compact local model; optimized for latency and memory usage on consumer hardware.",
-  },
+    details: "Architecture: REST-based aggregation service + dashboard UI; structured data pipeline for cross-cloud normalization and monthly trend analysis."
+  }
 ];
 
 const statusColor: Record<string, string> = {
   STABLE: "text-crimson-glow",
   OPERATIONAL: "text-primary",
-  TESTING: "text-muted-foreground",
+  "WORK IN PROGRESS": "text-muted-foreground",
   DEPLOYED: "text-crimson-glow",
 };
 
@@ -128,6 +137,31 @@ const ProjectArchive = () => {
                 <div className="font-pixel text-[9px] text-muted-foreground tracking-wider mb-1">ARCHITECTURE</div>
                 <div className="font-terminal text-sm text-muted-foreground">{selected.details}</div>
               </div>
+              
+              {(selected.githubUrl || selected.websiteUrl) && (
+                <div className="flex flex-wrap gap-4 pt-2 border-t border-border mt-4">
+                  {selected.githubUrl && (
+                    <a
+                      href={selected.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="interactive border border-border bg-background px-3 py-1.5 text-xs font-terminal text-foreground hover:border-primary hover:text-primary transition-all group"
+                    >
+                      [ <span className="group-hover:text-primary">GITHUB</span> ]
+                    </a>
+                  )}
+                  {selected.websiteUrl && (
+                    <a
+                      href={selected.websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="interactive border border-border bg-background px-3 py-1.5 text-xs font-terminal text-foreground hover:border-primary hover:text-primary transition-all group"
+                    >
+                      [ <span className="group-hover:text-primary">LIVE SITE</span> ]
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

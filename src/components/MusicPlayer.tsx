@@ -7,7 +7,7 @@ const MusicPlayer = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const audio = new Audio();
+    const audio = new Audio("/ambient.mp3");
     audio.loop = true;
     audio.volume = volume;
     audioRef.current = audio;

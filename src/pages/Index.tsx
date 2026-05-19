@@ -31,7 +31,7 @@ const Index = () => {
 
   // Force dark mode on initial load
   useEffect(() => {
-    const stored = localStorage.getItem("crimson-theme");
+    const stored = localStorage.getItem("cyan-theme");
     if (!stored || stored === "dark") {
       document.documentElement.classList.add("dark");
     }
@@ -102,7 +102,7 @@ const Index = () => {
         {/* STATUS STRIP */}
         <ScrollReveal>
           <div className="border-2 border-border bg-accent px-4 py-2 flex items-center justify-between panel-glow">
-            <span className="font-pixel text-[10px] tracking-wider text-primary">CRIMSON ARCHIVE v5.0</span>
+            <span className="font-pixel text-[10px] tracking-wider text-primary">CYAN CONSOLE v5.0</span>
             <div className="flex items-center gap-4">
               <span className="font-terminal text-xs text-muted-foreground">
                 SIGNAL: <span className="text-primary status-dot inline-block">●</span> UNSTABLE
@@ -212,7 +212,7 @@ const Index = () => {
 
         {/* Footer */}
         <div className="text-center py-4 font-terminal text-xs text-muted-foreground border-t border-border">
-          CRIMSON ARCHIVE © 2026 — YASFTW — ALL SYSTEMS MONITORED
+          CYAN CONSOLE © 2026 — YASHFTW — ALL SYSTEMS MONITORED
         </div>
       </div>
     </div>
