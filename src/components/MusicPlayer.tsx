@@ -34,7 +34,7 @@ const MusicPlayer = () => {
   };
 
   return (
-    <div className="border-2 border-border bg-card px-3 py-2 panel-glow flex items-center gap-3 transition-all duration-500 hover:border-primary/60">
+    <div className="rounded-full border-2 border-border bg-card px-3 py-2 panel-glow flex items-center gap-3 transition-colors duration-500 hover:border-primary/60">
       <span className="text-primary text-sm icon-float">🎵</span>
       <span className="font-pixel text-[8px] text-muted-foreground tracking-wider hidden sm:inline">
         AMBIENT

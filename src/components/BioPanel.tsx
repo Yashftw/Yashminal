@@ -22,7 +22,7 @@ const BioPanel = () => {
             className="interactive"
           >
             <span className="text-muted-foreground text-sm">NAME: </span>
-            <div className="text-primary font-bold glitch-hover inline-block font-terminal text-3xl sm:text-4xl tracking-wide mt-1">
+            <div className="text-primary text-glow font-bold glitch-hover inline-block font-terminal text-3xl sm:text-4xl tracking-wide mt-1">
               YASHRAJ YADAV
             </div>
           </div>
@@ -47,7 +47,14 @@ const BioPanel = () => {
               <div className="w-full h-full bg-primary connection-line" />
               <div className="absolute top-0 left-0 w-2 h-2 rounded-full bg-primary status-dot" style={{ animationDuration: "0.8s" }} />
             </div>
-            <div className="border-2 border-primary bg-card p-1 panel-glow">
+            <div
+              className="hud-box hud-glow p-1"
+              style={{
+                ["--bw" as string]: "2px",
+                ["--hud-fill" as string]: "hsl(var(--card))",
+                ["--hud-line" as string]: "var(--primary)",
+              }}
+            >
               <div className="bg-accent px-2 py-0.5 border-b border-border mb-1">
                 <span className="font-pixel text-[8px] text-primary tracking-wider">ENTITY.IMG</span>
               </div>

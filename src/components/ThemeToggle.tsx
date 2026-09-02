@@ -22,7 +22,7 @@ const ThemeToggle = () => {
   return (
     <button
       onClick={() => setDark((d) => !d)}
-      className="interactive border-2 border-border bg-card px-3 py-1.5 font-pixel text-[9px] tracking-wider text-primary hover:bg-accent transition-all panel-glow"
+      className="interactive lift-hover rounded-full border-2 border-border bg-card px-3 py-1.5 font-pixel text-[9px] tracking-wider text-primary hover:bg-accent transition-colors panel-glow"
       aria-label="Toggle theme"
     >
       {dark ? "☀ LIGHT" : "☾ DARK"}

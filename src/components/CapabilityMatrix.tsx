@@ -42,14 +42,16 @@ const CapabilityMatrix = () => {
   };
 
   return (
-    <PanelWrapper title="OBJECTIVES">
+    <PanelWrapper title="OBJECTIVES" icon="◇">
       <div className="space-y-3 font-terminal text-sm">
         {capabilities.map((cap, i) => (
           <button
             key={i}
             onClick={() => handleClick(i)}
-            className="interactive w-full text-left border border-border bg-background p-3 hover-shimmer transition-all duration-300"
+            className="interactive lift-hover hud-box hud-glow w-full text-left hover-shimmer"
+            style={{ ["--hud-fill" as string]: "hsl(var(--background))" }}
           >
+            <div className="p-3">
             <div className="text-muted-foreground text-xs font-pixel tracking-wider mb-1">
               {cap.description}
             </div>
@@ -78,6 +80,7 @@ const CapabilityMatrix = () => {
                 <p className="text-muted-foreground text-xs">{cap.detail}</p>
               </div>
             )}
+            </div>
           </button>
         ))}
       </div>

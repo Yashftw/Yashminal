@@ -39,7 +39,7 @@ const GreetIcon = ({ onUnlock }: { onUnlock?: () => void }) => {
       <button
         onClick={handleClick}
         className={`interactive relative w-14 h-14 rounded-full border-2 border-primary bg-card flex items-center justify-center transition-all duration-500 ${
-          expanded ? "scale-110 panel-glow" : "glow-pulse"
+          expanded ? "scale-110" : "hud-glow-pulse"
         }`}
       >
         <div className="w-6 h-6 rounded-full bg-primary/80 status-dot" />
@@ -48,7 +48,7 @@ const GreetIcon = ({ onUnlock }: { onUnlock?: () => void }) => {
 
       {expanded && !response && (
         <div className="flicker-in w-full max-w-sm space-y-3">
-          <div className="border border-border bg-accent p-3 text-center">
+          <div className="hud-box p-3 text-center" style={{ ["--hud-fill" as string]: "hsl(var(--accent))" }}>
             <p className="font-terminal text-sm text-foreground">
               "Greetings. How are you?"
             </p>
@@ -61,11 +61,11 @@ const GreetIcon = ({ onUnlock }: { onUnlock?: () => void }) => {
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               placeholder="Type your response..."
               autoFocus
-              className="flex-1 bg-background border border-border px-3 py-1.5 font-terminal text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              className="flex-1 bg-background border border-border px-3 py-1.5 font-terminal text-sm text-foreground placeholder:text-muted-foreground transition-all duration-300 focus:border-primary focus:outline-none focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.15)]"
             />
             <button
               onClick={handleSubmit}
-              className="interactive border border-primary bg-accent px-4 py-1.5 font-pixel text-[8px] text-primary hover:bg-primary hover:text-primary-foreground tracking-wider transition-colors"
+              className="interactive lift-hover border border-primary bg-accent px-4 py-1.5 font-pixel text-[8px] text-primary hover:bg-primary hover:text-primary-foreground tracking-wider transition-colors"
             >
               SUBMIT
             </button>
@@ -74,7 +74,7 @@ const GreetIcon = ({ onUnlock }: { onUnlock?: () => void }) => {
       )}
 
       {response && (
-        <div className="flicker-in border border-border bg-accent p-3 max-w-sm text-center">
+        <div className="flicker-in hud-box p-3 max-w-sm text-center" style={{ ["--hud-fill" as string]: "hsl(var(--accent))" }}>
           <p className="font-terminal text-sm text-foreground">"{response}"</p>
         </div>
       )}

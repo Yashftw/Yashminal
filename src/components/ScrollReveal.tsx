@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-const ScrollReveal = ({ children, delay = 0 }: { children: ReactNode; delay?: number }) => {
+const ScrollReveal = ({
+  children,
+  delay = 0,
+  className = "",
+}: {
+  children: ReactNode;
+  delay?: number;
+  className?: string;
+}) => {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -21,7 +29,7 @@ const ScrollReveal = ({ children, delay = 0 }: { children: ReactNode; delay?: nu
   return (
     <div
       ref={ref}
-      className={visible ? "scroll-fade-in" : "opacity-0"}
+      className={`${visible ? "scroll-fade-in" : "opacity-0"} ${className}`}
       style={{ animationDelay: `${delay}ms` }}
     >
       {children}

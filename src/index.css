@@ -33,7 +33,7 @@
     --input: 210 25% 82%;
     --ring: 197 100% 45%;
 
-    --radius: 0px;
+    --radius: 14px;
 
     --crimson-glow: 197 100% 55%;
     --crimson-dark: 205 60% 16%;
@@ -78,7 +78,11 @@
 @layer base {
   * {
     @apply border-border;
-    transition: background-color 0.6s ease, color 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease;
+    transition: background-color 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      color 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   body {
@@ -210,17 +214,13 @@
   animation: screen-glitch 0.1s ease-in-out;
 }
 
-/* Subtle shake on hover */
-@keyframes subtleShake {
-  0% { transform: translate(0); }
-  25% { transform: translate(-1px, 1px); }
-  50% { transform: translate(1px, -1px); }
-  75% { transform: translate(-1px, 0); }
-  100% { transform: translate(0); }
+/* Smooth hover lift (formerly a jitter shake — kept the class name so existing markup upgrades for free) */
+.hover-shake {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .hover-shake:hover {
-  animation: subtleShake 0.15s ease-in-out;
+  transform: translateY(-4px);
 }
 
 /* Blink cursor */
@@ -237,11 +237,22 @@
 
 /* Panel glow */
 .panel-glow {
-  box-shadow: 0 0 10px hsl(var(--secondary) / 0.4), inset 0 0 10px hsl(var(--crimson-dark) / 0.4);
+  box-shadow: 0 8px 30px -12px hsl(220 60% 2% / 0.5), 0 0 16px hsl(var(--secondary) / 0.3), inset 0 0 10px hsl(var(--crimson-dark) / 0.3);
+  transition: box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1), transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .panel-glow:hover {
-  box-shadow: 0 0 20px hsl(var(--primary) / 0.5), inset 0 0 12px hsl(var(--crimson-dark) / 0.4);
+  box-shadow: 0 14px 40px -14px hsl(220 60% 2% / 0.6), 0 0 26px hsl(var(--primary) / 0.4), inset 0 0 12px hsl(var(--crimson-dark) / 0.35);
+}
+
+/* Modern utility: smooth lift, for cards/tiles/buttons.
+   Transform only — box-shadow would be clipped away by the HUD frames. */
+.lift-hover {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease;
+}
+
+.lift-hover:hover {
+  transform: translateY(-3px);
 }
 
 /* Progress bar fill animation */
@@ -280,6 +291,20 @@
   animation: boot-jitter 120ms steps(2, end);
 }
 
+/* Boot screen: data pulse running down the side bus */
+@keyframes bootPulseTravel {
+  0% { top: -4%; opacity: 0; }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
+  100% { top: 104%; opacity: 0; }
+}
+
+.boot-pulse-travel {
+  animation: bootPulseTravel 1.9s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  box-shadow: 0 0 10px hsl(var(--primary)), 0 0 20px hsl(var(--primary) / 0.6);
+  will-change: top;
+}
+
 /* Flicker in */
 @keyframes flicker-in {
   0% { opacity: 0; }
@@ -304,6 +329,16 @@
 .scroll-fade-in {
   opacity: 0;
   animation: scrollFadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Modal pop-in */
+@keyframes modalPopIn {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-pop-in {
+  animation: modalPopIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* Glow pulse on borders */
@@ -354,14 +389,19 @@
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: hsl(var(--background));
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
-  border: 1px solid hsl(var(--muted));
+  background: hsl(var(--primary) / 0.35);
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.6);
 }
 
 /* Background glow */
@@ -375,8 +415,9 @@
 
 /* Glass effect panels */
 .glass-panel {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  background-image: linear-gradient(160deg, hsl(var(--primary) / 0.05), transparent 55%);
 }
 
 /* Stagger animations */
@@ -458,6 +499,131 @@
 
 .retro-load-bar {
   animation: retroLoad 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ===== HUD ANGULAR FRAMES (solid mitred corners, no gaps) =====
+   clip-path alone eats the border at the cut, leaving open corners. Instead the
+   element itself IS the border (background = border colour) and a clipped inner
+   layer paints the fill, so the outline stays continuous around the miter.
+   clip-path also clips box-shadow, so glow comes from `filter: drop-shadow`. */
+
+.hud-frame,
+.hud-box,
+.hud-top {
+  --cut: 14px;
+  --bw: 2px;
+  position: relative;
+  background-color: hsl(var(--hud-line, var(--border)));
+  border: 0;
+  transition: background-color 0.3s ease;
+}
+
+.hud-frame,
+.hud-box {
+  clip-path: polygon(
+    0 var(--cut), var(--cut) 0,
+    calc(100% - var(--cut)) 0, 100% var(--cut),
+    100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%,
+    var(--cut) 100%, 0 calc(100% - var(--cut))
+  );
+}
+
+/* Docked to a viewport edge: only the top pair is cut */
+.hud-top {
+  clip-path: polygon(
+    0 var(--cut), var(--cut) 0,
+    calc(100% - var(--cut)) 0, 100% var(--cut),
+    100% 100%, 0 100%
+  );
+}
+
+.hud-frame { padding: var(--bw); }
+.hud-top { padding: var(--bw) var(--bw) 0; }
+
+.hud-frame-body,
+.hud-top-body {
+  --icut: calc(var(--cut) - var(--bw));
+  height: 100%;
+}
+
+.hud-frame-body {
+  clip-path: polygon(
+    0 var(--icut), var(--icut) 0,
+    calc(100% - var(--icut)) 0, 100% var(--icut),
+    100% calc(100% - var(--icut)), calc(100% - var(--icut)) 100%,
+    var(--icut) 100%, 0 calc(100% - var(--icut))
+  );
+}
+
+.hud-top-body {
+  clip-path: polygon(
+    0 var(--icut), var(--icut) 0,
+    calc(100% - var(--icut)) 0, 100% var(--icut),
+    100% 100%, 0 100%
+  );
+}
+
+/* Single-fill boxes (cards, tiles, buttons): fill painted by a pseudo layer */
+.hud-box {
+  --cut: 9px;
+  --bw: 1px;
+}
+
+.hud-box::before {
+  content: '';
+  position: absolute;
+  inset: var(--bw);
+  z-index: 0;
+  pointer-events: none;
+  background: var(--hud-fill, hsl(var(--background)));
+  clip-path: polygon(
+    0 calc(var(--cut) - var(--bw)), calc(var(--cut) - var(--bw)) 0,
+    calc(100% - var(--cut) + var(--bw)) 0, 100% calc(var(--cut) - var(--bw)),
+    100% calc(100% - var(--cut) + var(--bw)), calc(100% - var(--cut) + var(--bw)) 100%,
+    calc(var(--cut) - var(--bw)) 100%, 0 calc(100% - var(--cut) + var(--bw))
+  );
+}
+
+.hud-box > * { position: relative; z-index: 1; }
+.hud-box.hover-shimmer::after { z-index: 2; }
+
+/* Glow that survives clip-path (drop-shadow follows the clipped silhouette) */
+.hud-glow {
+  filter: drop-shadow(0 0 7px hsl(var(--primary) / 0.18));
+  transition: filter 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hud-glow:hover {
+  filter: drop-shadow(0 0 15px hsl(var(--primary) / 0.38));
+}
+
+@keyframes hudGlowPulse {
+  0%, 100% { filter: drop-shadow(0 0 6px hsl(var(--primary) / 0.15)); }
+  50% { filter: drop-shadow(0 0 14px hsl(var(--primary) / 0.32)); }
+}
+
+.hud-glow-pulse { animation: hudGlowPulse 5s ease-in-out infinite; }
+
+/* Box-drawing style divider: ├──────┤ */
+.ascii-rule {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: hsl(var(--muted-foreground));
+  font-family: 'VT323', monospace;
+}
+.ascii-rule::before,
+.ascii-rule::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-image: repeating-linear-gradient(90deg, hsl(var(--border)) 0, hsl(var(--border)) 4px, transparent 4px, transparent 8px);
+  opacity: 0.7;
+}
+
+/* Soft neon text glow */
+.text-glow {
+  text-shadow: 0 0 12px hsl(var(--primary) / 0.45), 0 0 30px hsl(var(--primary) / 0.2);
 }
 
 /* Icon floating */

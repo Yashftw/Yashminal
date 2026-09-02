@@ -27,11 +27,10 @@ const ExternalLinkDialog = ({ href, children, className = "" }: ExternalLinkProp
       </a>
 
       {showConfirm && (
-        <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/80">
-          <div className="flicker-in border-2 border-border bg-card max-w-md w-full mx-4 panel-glow">
-            <div className="absolute inset-[3px] border border-border/30 pointer-events-none" />
-
-            <div className="bg-accent border-b-2 border-border px-4 py-2">
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/70 backdrop-blur-sm scroll-fade-in">
+          <div className="modal-pop-in hud-frame hud-glow max-w-md w-full mx-4">
+            <div className="hud-frame-body bg-card dark:glass-panel">
+            <div className="bg-gradient-to-r from-accent to-accent/70 border-b-2 border-border px-4 py-2">
               <span className="font-pixel text-[10px] text-primary tracking-wider">
                 EXTERNAL REDIRECT WARNING
               </span>
@@ -51,17 +50,28 @@ const ExternalLinkDialog = ({ href, children, className = "" }: ExternalLinkProp
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setShowConfirm(false)}
-                  className="interactive border-2 border-primary bg-accent px-6 py-2 font-pixel text-[10px] text-primary hover:bg-primary hover:text-primary-foreground transition-colors tracking-wider"
+                  className="interactive lift-hover hud-box hud-glow"
+                  style={{
+                    ["--bw" as string]: "2px",
+                    ["--hud-fill" as string]: "hsl(var(--accent))",
+                    ["--hud-line" as string]: "var(--primary)",
+                  }}
                 >
-                  PROCEED
+                  <span className="block px-6 py-2 font-pixel text-[10px] text-primary tracking-wider">
+                    PROCEED
+                  </span>
                 </a>
                 <button
                   onClick={() => setShowConfirm(false)}
-                  className="interactive border-2 border-border bg-card px-6 py-2 font-pixel text-[10px] text-muted-foreground hover:text-foreground hover:border-foreground transition-colors tracking-wider"
+                  className="interactive lift-hover hud-box"
+                  style={{ ["--bw" as string]: "2px", ["--hud-fill" as string]: "hsl(var(--card))" }}
                 >
-                  CANCEL
+                  <span className="block px-6 py-2 font-pixel text-[10px] text-muted-foreground hover:text-foreground transition-colors tracking-wider">
+                    CANCEL
+                  </span>
                 </button>
               </div>
+            </div>
             </div>
           </div>
         </div>
