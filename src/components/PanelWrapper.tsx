@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 
 interface PanelProps {
   title: string;
@@ -7,7 +7,17 @@ interface PanelProps {
   icon?: string;
 }
 
+/** Set by the OS window frame: the window already supplies the chrome, so
+ *  panels render just their content instead of a second framed box. */
+export const InWindowContext = createContext(false);
+
 const PanelWrapper = ({ title, children, className = "", icon = "■" }: PanelProps) => {
+  const inWindow = useContext(InWindowContext);
+
+  if (inWindow) {
+    return <div className={`p-4 sm:p-5 ${className}`}>{children}</div>;
+  }
+
   return (
     <div className={`hud-frame hud-glow hud-glow-pulse h-full ${className}`}>
       <div className="hud-frame-body flex flex-col bg-card dark:glass-panel">

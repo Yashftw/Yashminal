@@ -85,14 +85,16 @@
       transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
+  /* Cursor images must stay within 128x128 or browsers silently drop them and
+     fall back to the keyword. The hotspots below are the arrow/finger tip. */
   body {
     @apply bg-background text-foreground;
     font-family: 'VT323', monospace;
-    cursor: url("/cursor-default.png") 6 6, auto;
+    cursor: url("/cursor-default.png") 8 2, auto;
   }
 
   a, button, [role="button"], .interactive {
-    cursor: url("/cursor-pointer.png") 10 6, pointer;
+    cursor: url("/cursor-pointer.png") 10 2, pointer;
   }
 }
 
@@ -604,6 +606,11 @@
 
 .hud-glow-pulse { animation: hudGlowPulse 5s ease-in-out infinite; }
 
+/* A running animation outranks a normal declaration, so the pulse was eating
+   `.hud-glow:hover`'s brighter filter outright. Standing the animation down on
+   hover hands the property back to the hover rule. */
+.hud-glow-pulse:hover { animation: none; }
+
 /* Box-drawing style divider: ├──────┤ */
 .ascii-rule {
   display: flex;
@@ -634,4 +641,246 @@
 
 .icon-float {
   animation: iconFloat 3s ease-in-out infinite;
+}
+
+/* ===== REDUCED MOTION =====
+   The ambient layer here is decorative: flicker, glow pulses, floats and the
+   scan background carry no information. Honour the OS setting by standing all
+   of it down, while leaving state-change transitions (hover, focus) intact so
+   the UI still reads as responsive. */
+@media (prefers-reduced-motion: reduce) {
+  .crt-flicker,
+  .hud-glow-pulse,
+  .icon-float,
+  .creature-idle,
+  .status-dot,
+  .holo-shimmer,
+  .card-float,
+  .connection-line,
+  .blink-cursor::after,
+  .boot-pulse-travel {
+    animation: none !important;
+  }
+
+  .scroll-fade-in,
+  .stagger-item,
+  .modal-pop-in,
+  .flicker-in {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .gridscan {
+    display: none;
+  }
+}
+
+/* =====================================================================
+   YASHMINAL OS — boot sequence, desktop, windows
+   ===================================================================== */
+
+/* ---- boot ---- */
+.boot-scan {
+  background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0, 0, 0, 0.35) 2px 4px);
+  animation: bootScanRoll 6s linear infinite;
+}
+@keyframes bootScanRoll {
+  to { background-position-y: 80px; }
+}
+.boot-vignette {
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.75) 100%);
+}
+.boot-blink { animation: bootBlink 1s steps(2, start) infinite; }
+@keyframes bootBlink { to { visibility: hidden; } }
+
+.boot-power {
+  box-shadow: 0 0 24px hsl(var(--primary) / 0.5), inset 0 0 18px hsl(var(--primary) / 0.25);
+  animation: bootPowerPulse 2s ease-in-out infinite;
+}
+@keyframes bootPowerPulse {
+  50% { box-shadow: 0 0 44px hsl(var(--primary) / 0.85), inset 0 0 26px hsl(var(--primary) / 0.45); }
+}
+
+/* CRT tube charging: a bright line opens into the full picture */
+.crt-warmup {
+  animation: crtWarm 1.25s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  transform-origin: center;
+  background: #fff;
+}
+@keyframes crtWarm {
+  0%   { transform: scale(0, 0.004); filter: brightness(4); opacity: 1; }
+  35%  { transform: scale(1, 0.004); filter: brightness(4); }
+  70%  { transform: scale(1, 1); filter: brightness(2.2); }
+  100% { transform: scale(1, 1); filter: brightness(1); opacity: 0.85; }
+}
+
+.boot-glow { text-shadow: 0 0 8px hsl(var(--primary)), 0 0 18px hsl(var(--primary) / 0.6); }
+.boot-jitter-slow { animation: bootJitterSlow 3.5s steps(1) infinite; }
+@keyframes bootJitterSlow {
+  0%, 92%, 100% { transform: none; }
+  93% { transform: translateX(-3px); }
+  95% { transform: translateX(4px) skewX(1deg); }
+  97% { transform: translateX(-2px); }
+}
+.boot-jitter { animation: bootJitterFast 2.2s steps(1) infinite; }
+@keyframes bootJitterFast {
+  0%, 85%, 100% { transform: none; }
+  86% { transform: translate(-5px, 1px) skewX(-2deg); }
+  88% { transform: translate(6px, -1px); }
+  90% { transform: translate(-2px, 0); }
+}
+.boot-logo {
+  color: hsl(var(--primary));
+  text-shadow: 3px 0 rgba(255, 0, 110, 0.7), -3px 0 rgba(0, 255, 240, 0.7), 0 0 22px hsl(var(--primary));
+  animation: bootLogoRgb 1.6s steps(1) infinite;
+}
+@keyframes bootLogoRgb {
+  0%, 70%, 100% { text-shadow: 3px 0 rgba(255, 0, 110, 0.7), -3px 0 rgba(0, 255, 240, 0.7), 0 0 22px hsl(var(--primary)); }
+  72% { text-shadow: -7px 0 rgba(255, 0, 110, 0.9), 7px 0 rgba(0, 255, 240, 0.9), 0 0 30px hsl(var(--primary)); }
+  76% { text-shadow: 1px 0 rgba(255, 0, 110, 0.5), -1px 0 rgba(0, 255, 240, 0.5), 0 0 22px hsl(var(--primary)); }
+}
+.boot-bar-glow { box-shadow: 0 0 18px hsl(var(--primary) / 0.35); }
+.boot-flash { animation: bootFlash 0.52s steps(5) forwards; background: hsl(var(--primary)); }
+@keyframes bootFlash {
+  0% { opacity: 0; }
+  20% { opacity: 1; transform: scaleY(0.02); }
+  45% { opacity: 1; transform: scaleY(1) translateX(10px); background: #fff; }
+  70% { opacity: 0.7; transform: translateX(-8px); }
+  100% { opacity: 0; }
+}
+
+/* ---- desktop ---- */
+.desktop-in { animation: desktopIn 0.7s steps(8) both; }
+@keyframes desktopIn {
+  0% { opacity: 0; filter: brightness(3) saturate(0); }
+  30% { opacity: 1; filter: brightness(1.8) hue-rotate(40deg); transform: translateX(6px); }
+  55% { transform: translateX(-4px); filter: none; }
+  100% { opacity: 1; transform: none; filter: none; }
+}
+.icon-pop { animation: iconPop 0.5s steps(5) both; }
+@keyframes iconPop {
+  0% { opacity: 0; transform: translateY(8px) scale(0.85); }
+  100% { opacity: 1; transform: none; }
+}
+.icon-glitch:hover { animation: glitch-text 0.3s ease-in-out; }
+.start-menu { animation: startUp 0.16s steps(4) both; transform-origin: bottom left; }
+@keyframes startUp {
+  from { opacity: 0; transform: scaleY(0.4); }
+  to { opacity: 1; transform: none; }
+}
+.eq-bar { height: 12px; animation: eq 0.9s ease-in-out infinite alternate; }
+@keyframes eq { from { height: 8px; } to { height: 60px; } }
+
+/* ---- windows ---- */
+.os-window { box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55); }
+.os-window-focus { box-shadow: 0 0 22px hsl(var(--primary) / 0.5), 0 8px 28px rgba(0, 0, 0, 0.6); }
+
+/* glitch-in: collapses to a line, tears sideways with RGB split, settles */
+.win-open { animation: winOpen 0.6s steps(1) both; }
+@keyframes winOpen {
+  0%   { opacity: 0; transform: scale(1, 0.01); }
+  8%   { opacity: 1; transform: scale(1.06, 0.03) translateX(-14px); filter: brightness(3); }
+  16%  { transform: scale(0.96, 0.12) translateX(18px); filter: drop-shadow(-8px 0 #ff006e) drop-shadow(8px 0 #00fff0); clip-path: inset(40% 0 38% 0); }
+  26%  { transform: scale(1.02, 0.6) translateX(-10px); clip-path: inset(0 0 55% 0); filter: hue-rotate(90deg) brightness(1.6); }
+  36%  { transform: scale(1, 0.95) translateX(12px); clip-path: inset(20% 0 0 0); filter: drop-shadow(6px 0 #ff006e) drop-shadow(-6px 0 #00fff0); }
+  48%  { transform: translateX(-7px) skewX(4deg); clip-path: inset(0 0 30% 0); filter: none; }
+  60%  { transform: translateX(5px); clip-path: inset(0); filter: brightness(1.5); }
+  72%  { transform: translateX(-3px) skewX(-2deg); filter: drop-shadow(3px 0 #ff006e) drop-shadow(-3px 0 #00fff0); }
+  86%  { transform: translateX(2px); filter: none; }
+  100% { opacity: 1; transform: none; clip-path: none; filter: none; }
+}
+.win-tear {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 14px, rgba(0, 255, 240, 0.35) 14px 17px, transparent 17px 31px, rgba(255, 0, 110, 0.3) 31px 33px),
+    linear-gradient(90deg, rgba(255, 0, 110, 0.18), transparent 40%, rgba(0, 255, 240, 0.18));
+  mix-blend-mode: screen;
+  animation: winTear 0.6s steps(6) forwards;
+}
+@keyframes winTear {
+  0% { opacity: 1; background-position: 0 0, 0 0; transform: translateX(10px); }
+  50% { opacity: 0.8; background-position: 0 24px, 0 0; transform: translateX(-8px); }
+  100% { opacity: 0; transform: none; }
+}
+.win-close { animation: winClose 0.24s steps(1) forwards; pointer-events: none; }
+@keyframes winClose {
+  0%   { transform: translateX(-6px); filter: drop-shadow(6px 0 #ff006e) drop-shadow(-6px 0 #00fff0); }
+  40%  { transform: scale(1, 0.5) translateX(8px); filter: brightness(2.5); clip-path: inset(25% 0 25% 0); }
+  75%  { transform: scale(1, 0.02); filter: brightness(4); clip-path: none; }
+  100% { opacity: 0; transform: scale(0, 0.01); }
+}
+.win-jitter { animation: winJitter 0.22s steps(1); }
+@keyframes winJitter {
+  0% { transform: translateX(-3px); filter: drop-shadow(3px 0 #ff006e) drop-shadow(-3px 0 #00fff0); }
+  35% { transform: translateX(4px) skewX(1deg); }
+  70% { transform: translateX(-2px); filter: none; }
+  100% { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .win-open, .win-close, .win-jitter, .win-tear, .desktop-in, .icon-pop, .boot-jitter, .boot-jitter-slow {
+    animation-duration: 0.01s;
+  }
+}
+
+/* =====================================================================
+   Round 2: static wallpaper, guide glitch, profile glitch, compact UI
+   ===================================================================== */
+
+/* A little smaller / sleeker across the board (rem-based sizes follow) */
+html { font-size: 14px; }
+
+/* Static, dark wallpaper (no motion) */
+.wallpaper {
+  background:
+    radial-gradient(ellipse at 50% 38%, hsl(205 70% 9%) 0%, hsl(222 55% 3%) 62%, #010204 100%),
+    #02040a;
+}
+.wallpaper::before {
+  display: none;
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(hsl(197 100% 45% / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(197 100% 45% / 0.045) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 85%);
+}
+:root:not(.dark) .wallpaper {
+  background: radial-gradient(ellipse at 50% 38%, hsl(205 60% 86%) 0%, hsl(210 50% 78%) 100%);
+}
+
+/* Guide teleport glitch */
+.guide-out { animation: guideOut 0.27s steps(1) forwards; }
+@keyframes guideOut {
+  0%   { transform: translateX(-4px); filter: drop-shadow(5px 0 #ff006e) drop-shadow(-5px 0 #00fff0); }
+  35%  { transform: translateX(8px) skewX(8deg); clip-path: inset(30% 0 20% 0); filter: brightness(2); }
+  70%  { transform: scale(1, 0.04); clip-path: none; filter: brightness(4); }
+  100% { opacity: 0; transform: scale(0, 0.01); }
+}
+.guide-in { animation: guideIn 0.43s steps(1) both; }
+@keyframes guideIn {
+  0%   { opacity: 0; transform: scale(1, 0.02); }
+  15%  { opacity: 1; transform: scale(1.1, 0.1) translateX(-10px); filter: brightness(3); }
+  30%  { transform: translateX(12px) skewX(-6deg); clip-path: inset(0 0 55% 0); filter: drop-shadow(6px 0 #ff006e) drop-shadow(-6px 0 #00fff0); }
+  50%  { transform: translateX(-8px); clip-path: inset(25% 0 0 0); filter: hue-rotate(90deg); }
+  70%  { transform: translateX(4px); clip-path: none; filter: drop-shadow(3px 0 #ff006e) drop-shadow(-3px 0 #00fff0); }
+  100% { opacity: 1; transform: none; clip-path: none; filter: none; }
+}
+
+/* Profile picture pops in with a glitch */
+.profile-glitch-in { animation: profileIn 0.7s steps(1) both; animation-delay: 0.35s; }
+@keyframes profileIn {
+  0%   { opacity: 0; transform: scale(1, 0.02); }
+  12%  { opacity: 1; transform: scale(1.12, 0.08) translateX(-12px); filter: brightness(3); }
+  26%  { transform: translateX(14px) skewX(-8deg); clip-path: inset(0 0 60% 0); filter: drop-shadow(7px 0 #ff006e) drop-shadow(-7px 0 #00fff0); }
+  42%  { transform: translateX(-10px); clip-path: inset(35% 0 0 0); filter: hue-rotate(120deg) brightness(1.5); }
+  58%  { transform: translateX(6px) skewX(3deg); clip-path: none; filter: drop-shadow(4px 0 #ff006e) drop-shadow(-4px 0 #00fff0); }
+  74%  { transform: translateX(-3px); filter: brightness(1.3); }
+  100% { opacity: 1; transform: none; filter: none; clip-path: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide-out, .guide-in, .profile-glitch-in { animation-duration: 0.01s; animation-delay: 0s; }
 }

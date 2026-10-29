@@ -5,7 +5,7 @@ interface TerminalLine {
   text: string;
 }
 
-const DRAGON_ART = String.raw`
+export const DRAGON_ART = String.raw`
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣤⣤⣤⠤
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣶⣿⠿⠋⠂⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣴⣶⣿⣿⡿⢟⠫⠑⠁⠀⠀⠀⠀
@@ -40,28 +40,15 @@ const CrimsonTerminal = () => {
   const [expanded, setExpanded] = useState(false);
   const [popup, setPopup] = useState<{ title: string; content: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const closeTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (expanded) scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight);
   }, [lines, expanded]);
 
-  useEffect(() => {
-    return () => {
-      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
-    };
-  }, []);
-
-  const scheduleAutoClose = () => {
-    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
-    closeTimerRef.current = window.setTimeout(() => setExpanded(false), 3200);
-  };
-
   const processCommand = (cmd: string) => {
     const lower = cmd.toLowerCase().trim();
     const newLines: TerminalLine[] = [{ type: "input", text: `> ${cmd}` }];
     setExpanded(true);
-    scheduleAutoClose();
 
     switch (lower) {
       case "help":

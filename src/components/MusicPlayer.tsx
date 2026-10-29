@@ -4,14 +4,32 @@ const MusicPlayer = () => {
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
   const [muted, setMuted] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const audio = new Audio("/ambient.mp3");
     audio.loop = true;
-    audio.volume = volume;
+    audio.preload = "none";
     audioRef.current = audio;
+
+    /* Keep the button in step with the element rather than assuming the
+       toggle worked: autoplay policy, a decode failure or a missing file all
+       leave playback stopped while the UI happily claims otherwise. */
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+    const onError = () => {
+      setUnavailable(true);
+      setPlaying(false);
+    };
+    audio.addEventListener("play", onPlay);
+    audio.addEventListener("pause", onPause);
+    audio.addEventListener("error", onError);
+
     return () => {
+      audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("error", onError);
       audio.pause();
       audio.src = "";
     };
@@ -24,13 +42,16 @@ const MusicPlayer = () => {
   }, [volume, muted]);
 
   const togglePlay = () => {
-    if (!audioRef.current) return;
+    const audio = audioRef.current;
+    if (!audio) return;
     if (playing) {
-      audioRef.current.pause();
+      audio.pause();
     } else {
-      audioRef.current.play().catch(() => {});
+      audio.play().catch(() => {
+        setUnavailable(true);
+        setPlaying(false);
+      });
     }
-    setPlaying(!playing);
   };
 
   return (
@@ -41,10 +62,12 @@ const MusicPlayer = () => {
       </span>
       <button
         onClick={togglePlay}
-        className="interactive font-terminal text-sm text-primary hover:text-accent-foreground transition-colors duration-300"
-        aria-label={playing ? "Pause" : "Play"}
+        disabled={unavailable}
+        title={unavailable ? "No ambient track available" : undefined}
+        className="interactive font-terminal text-sm text-primary hover:text-accent-foreground transition-colors duration-300 disabled:cursor-not-allowed disabled:text-muted-foreground disabled:hover:text-muted-foreground"
+        aria-label={unavailable ? "Ambient track unavailable" : playing ? "Pause" : "Play"}
       >
-        {playing ? "❚❚" : "▶"}
+        {unavailable ? "⃠" : playing ? "❚❚" : "▶"}
       </button>
       <button
         onClick={() => setMuted(!muted)}

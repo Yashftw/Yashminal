@@ -2,22 +2,19 @@ import { useEffect, useState } from "react";
 
 const ThemeToggle = () => {
   const [dark, setDark] = useState(() => {
-    const stored = localStorage.getItem("crimson-theme");
-    return stored ? stored === "dark" : true;
+    try {
+      const stored = localStorage.getItem("crimson-theme");
+      return stored ? stored === "dark" : true;
+    } catch {
+      // Private browsing / blocked storage — fall back to the default theme.
+      return true;
+    }
   });
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
     localStorage.setItem("crimson-theme", dark ? "dark" : "light");
   }, [dark]);
-
-  useEffect(() => {
-    // Ensure dark class on mount
-    const stored = localStorage.getItem("crimson-theme");
-    if (!stored || stored === "dark") {
-      document.documentElement.classList.add("dark");
-    }
-  }, []);
 
   return (
     <button

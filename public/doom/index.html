@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DOOM</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; font-family: "Courier New", monospace; color: #0bb7ff; }
+  #stage { position: absolute; inset: 0 0 22px 0; display: flex; align-items: center; justify-content: center; }
+  canvas { width: 100%; height: 100%; max-width: calc((100vh - 22px) * 4 / 3); max-height: calc(100vw * 3 / 4);
+           image-rendering: pixelated; image-rendering: crisp-edges; background: #000; outline: none; }
+  #hud { position: absolute; left: 0; right: 0; bottom: 0; height: 22px; line-height: 22px; text-align: center;
+         font-size: 11px; letter-spacing: .06em; color: #0bb7ff99; background: #02060c; border-top: 1px solid #0bb7ff44; white-space: nowrap; overflow: hidden; }
+  #msg { position: absolute; inset: 0 0 22px 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+         gap: 10px; text-align: center; background: #000c; font-size: 14px; letter-spacing: .12em; cursor: pointer; text-shadow: 0 0 8px #0bb7ff; padding: 16px; }
+  #msg small { opacity: .7; letter-spacing: .05em; }
+  #msg.err { color: #ff5470; text-shadow: 0 0 8px #ff5470; cursor: default; }
+  .hide { display: none !important; }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c" width="320" height="200" tabindex="0"></canvas></div>
+<div id="msg"><span id="msgText">LOADING DOOM...</span><small id="msgSub"></small></div>
+<div id="hud">ARROWS / WASD move &middot; CTRL fire &middot; SPACE use &middot; SHIFT run &middot; ESC menu &middot; ENTER select</div>
+
+<script>
+(function () {
+  var canvas = document.getElementById('c');
+  var msg = document.getElementById('msg');
+  var msgText = document.getElementById('msgText');
+  var msgSub = document.getElementById('msgSub');
+  var ready = false, focused = false, dead = false;
+
+  function show(text, sub, err) {
+    msgText.textContent = text; msgSub.textContent = sub || '';
+    msg.className = err ? 'err' : ''; msg.classList.remove('hide');
+  }
+  function hide() { msg.classList.add('hide'); }
+
+  /* ---- Doom key codes (doomdef.h) ---- */
+  var K = { right: 0xae, left: 0xac, up: 0xad, down: 0xaf, esc: 27, enter: 13, tab: 9, bksp: 127,
+            rshift: 0x80 + 0x36, rctrl: 0x80 + 0x1d, ralt: 0x80 + 0x38, pause: 0xff };
+  var MAP = {
+    ArrowRight: K.right, ArrowLeft: K.left, ArrowUp: K.up, ArrowDown: K.down,
+    KeyD: K.right, KeyA: K.left, KeyW: K.up, KeyS: K.down,
+    KeyQ: 0x2c /* , strafe left */, KeyE: 0x2e /* . strafe right */,
+    Escape: K.esc, Enter: K.enter, NumpadEnter: K.enter, Tab: K.tab, Backspace: K.bksp, Pause: K.pause,
+    ShiftLeft: K.rshift, ShiftRight: K.rshift, ControlLeft: K.rctrl, ControlRight: K.rctrl,
+    AltLeft: K.ralt, AltRight: K.ralt, Space: 32, Equal: 0x3d, Minus: 0x2d, Comma: 0x2c, Period: 0x2e,
+    F1: 0x80 + 0x3b, F2: 0x80 + 0x3c, F3: 0x80 + 0x3d, F4: 0x80 + 0x3e, F5: 0x80 + 0x3f, F6: 0x80 + 0x40,
+    F7: 0x80 + 0x41, F8: 0x80 + 0x42, F9: 0x80 + 0x43, F10: 0x80 + 0x44, F11: 0x80 + 0x57, F12: 0x80 + 0x58
+  };
+  function doomKey(e) {
+    if (MAP[e.code] !== undefined) return MAP[e.code];
+    if (/^Key[A-Z]$/.test(e.code)) return e.code.charCodeAt(3) + 32; // lowercase ascii
+    if (/^Digit[0-9]$/.test(e.code)) return e.code.charCodeAt(5);
+    return null;
+  }
+  function onKey(down) {
+    return function (e) {
+      if (!ready || dead) return;
+      var k = doomKey(e);
+      if (k === null) return;
+      e.preventDefault();
+      if (!e.repeat || !down) Module._doom_key(down ? 1 : 0, k);
+      if (down) resumeAudio();
+    };
+  }
+  window.addEventListener('keydown', onKey(true));
+  window.addEventListener('keyup', onKey(false));
+
+  function resumeAudio() {
+    if (!Module.doomAudio) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) Module.doomAudio = new AC();
+    }
+    if (Module.doomAudio && Module.doomAudio.state === 'suspended') Module.doomAudio.resume();
+  }
+
+  /* ---- click-to-focus overlay (keys only reach us once the frame has focus) ---- */
+  function focusGame() { window.focus(); canvas.focus(); resumeAudio(); focused = true; if (ready) hide(); }
+  msg.addEventListener('click', function () { if (ready && !dead) focusGame(); });
+  canvas.addEventListener('mousedown', focusGame);
+  window.addEventListener('blur', function () {
+    if (ready && !dead) { focused = false; show('PAUSED', 'CLICK TO RESUME'); }
+  });
+
+  /* messages from the portfolio OS */
+  window.addEventListener('message', function (e) {
+    if (e.data && e.data.type === 'mute') Module.doomMuted = !!e.data.muted;
+  });
+
+  window.Module = {
+    canvas: canvas,
+    print: function (t) { console.log(t); },
+    printErr: function (t) { console.warn(t); },
+    onDoomError: function (t) { dead = true; show('DOOM CRASHED', t, true); },
+    onDoomExit: function () { dead = true; show('YOU QUIT DOOM', 'CLOSE AND REOPEN THE WINDOW TO PLAY AGAIN'); },
+    setStatus: function (s) { if (s && !ready) msgSub.textContent = s; },
+    postRun: [function () {
+      ready = true;
+      show('DOOM IS READY', 'CLICK TO PLAY');
+    }],
+    onAbort: function (w) { dead = true; show('DOOM CRASHED', String(w), true); }
+  };
+  // the game starts its main loop inside main(); postRun fires after it yields
+  setTimeout(function () { if (!ready && !dead) { ready = true; show('DOOM IS READY', 'CLICK TO PLAY'); } }, 1200);
+})();
+</script>
+<script src="doom.js"></script>
+</body>
+</html>

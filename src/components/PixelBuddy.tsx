@@ -178,7 +178,7 @@ const FLAIR: Record<string, Px[]> = {
 
 /* ---------- personality ---------- */
 
-const GREETINGS = [
+export const GREETINGS = [
   "sup. i live here.",
   "you clicked me. bold.",
   "still compiling my thoughts…",
@@ -193,11 +193,15 @@ const GREETINGS = [
   "i'm 15 frames of pure charisma.",
 ];
 
-const rnd = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
+export const rnd = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
 
 /* ---------- sprite ---------- */
 
-const Sprite = ({ frame, size }: { frame: Frame; size: number }) => {
+const BACKING: Px[] = [
+  [4, 7, 24, 17], [2, 10, 28, 11], [3, 3, 6, 5], [23, 3, 6, 5], [5, 1, 3, 3], [24, 1, 3, 3], [12, 24, 8, 5],
+];
+
+export const Sprite = ({ frame, size }: { frame: Frame; size: number }) => {
   const line = "hsl(var(--primary))";
   const fill = "hsl(var(--primary) / 0.75)";
 
@@ -221,6 +225,10 @@ const Sprite = ({ frame, size }: { frame: Frame; size: number }) => {
       style={{ transform: `rotate(${frame.tilt ?? 0}deg)`, transition: "transform 220ms ease" }}
       aria-hidden="true"
     >
+      {/* opaque backing so nothing behind the sprite shows through */}
+      {BACKING.map(([x, y, w, h], i) => (
+        <rect key={`b${i}`} x={x} y={y} width={w} height={h} fill="hsl(var(--card))" />
+      ))}
       {outline.map(([x, y, w, h], i) => (
         <rect key={`o${i}`} x={x} y={y} width={w} height={h} fill={line} />
       ))}
@@ -233,7 +241,7 @@ const Sprite = ({ frame, size }: { frame: Frame; size: number }) => {
 
 /* ---------- roaming buddy ---------- */
 
-const byName = (n: string) => FRAMES.findIndex((f) => f.name === n);
+export const byName = (n: string) => FRAMES.findIndex((f) => f.name === n);
 
 const PixelBuddy = () => {
   const [frameIdx, setFrameIdx] = useState(0);

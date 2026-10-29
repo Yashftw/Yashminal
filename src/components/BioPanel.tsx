@@ -1,26 +1,12 @@
-import { useState, useRef } from "react";
 import PanelWrapper from "./PanelWrapper";
 import profileImg from "@/assets/profile.png";
 
 const BioPanel = () => {
-  const [showProfile, setShowProfile] = useState(false);
-  const [profileGlitch, setProfileGlitch] = useState(false);
-
-  const handleProfileHover = () => {
-    setShowProfile(true);
-    setProfileGlitch(true);
-    setTimeout(() => setProfileGlitch(false), 300);
-  };
-
   return (
     <PanelWrapper title="BIO">
-      <div className="relative min-h-[160px]">
-        <div className="space-y-2 font-terminal text-sm">
-          <div
-            onMouseEnter={handleProfileHover}
-            onMouseLeave={() => setShowProfile(false)}
-            className="interactive"
-          >
+      <div className="flex flex-col-reverse items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-2 font-terminal text-base">
+          <div>
             <span className="text-muted-foreground text-sm">NAME: </span>
             <div className="text-primary text-glow font-bold glitch-hover inline-block font-terminal text-3xl sm:text-4xl tracking-wide mt-1">
               YASHRAJ YADAV
@@ -40,32 +26,13 @@ const BioPanel = () => {
           </div>
         </div>
 
-        {/* Profile picture */}
-        {showProfile && (
-          <div className="absolute top-0 right-0 flicker-in z-20">
-            <div className="absolute -left-16 top-12 w-16 h-[2px] overflow-hidden">
-              <div className="w-full h-full bg-primary connection-line" />
-              <div className="absolute top-0 left-0 w-2 h-2 rounded-full bg-primary status-dot" style={{ animationDuration: "0.8s" }} />
-            </div>
-            <div
-              className="hud-box hud-glow p-1"
-              style={{
-                ["--bw" as string]: "2px",
-                ["--hud-fill" as string]: "hsl(var(--card))",
-                ["--hud-line" as string]: "var(--primary)",
-              }}
-            >
-              <div className="bg-accent px-2 py-0.5 border-b border-border mb-1">
-                <span className="font-pixel text-[8px] text-primary tracking-wider">ENTITY.IMG</span>
-              </div>
-              <img
-                src={profileImg}
-                alt="Yashraj Yadav"
-                className={`w-24 h-24 object-cover ${profileGlitch ? "rgb-glitch" : ""}`}
-              />
-            </div>
+        {/* Profile picture: always visible, glitches in on open */}
+        <div className="shrink-0 border-2 border-primary bg-card p-1 profile-glitch-in" style={{ boxShadow: "0 0 16px hsl(var(--primary) / 0.45)" }}>
+          <div className="bg-accent px-2 py-0.5 border-b border-border mb-1">
+            <span className="font-pixel text-[8px] text-primary tracking-wider">ENTITY.IMG</span>
           </div>
-        )}
+          <img src={profileImg} alt="Yashraj Yadav" className="w-28 h-28 object-cover" />
+        </div>
       </div>
     </PanelWrapper>
   );

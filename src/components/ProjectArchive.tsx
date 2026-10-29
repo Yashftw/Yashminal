@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import PanelWrapper from "./PanelWrapper";
+import { guideBus } from "@/os/guideBus";
 
 interface Project {
   id: string;
@@ -121,7 +122,14 @@ const ProjectArchive = () => {
             <button
               key={project.id}
               onClick={() => openProject(project)}
-              onMouseEnter={() => setHovered(project.id)}
+              onMouseEnter={() => {
+                setHovered(project.id);
+                guideBus.hint(
+                  "projects",
+                  project.id,
+                  `${project.name}: ${project.description} Built with ${project.techStack.join(", ")}.`,
+                );
+              }}
               onMouseLeave={() => setHovered(null)}
               className="interactive lift-hover hud-box hud-glow text-left group stagger-item w-full"
               style={{

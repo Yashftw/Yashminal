@@ -38,77 +38,104 @@ const NODES: NodeSpec[] = Array.from({ length: 15 }, (_, i) => {
   };
 });
 
-/** One column of cyber nodes. Memoised on the integer progress so it only
- *  re-renders when a node could actually change state. */
-const NodeColumn = memo(({ progress, mirrored }: { progress: number; mirrored?: boolean }) => {
-  const p = progress / 100;
+/** One column of cyber nodes.
+ *
+ *  Keyed on how many nodes are lit (0–15) rather than on raw progress, so it
+ *  reconciles 15 times across the whole boot instead of once per frame. The
+ *  continuous part — spine height, glow radius, column opacity — rides on the
+ *  `--boot-p` custom property that the loop writes straight to the DOM, so it
+ *  stays smooth without going through React at all. */
+const NodeColumn = memo(({ lit, mirrored }: { lit: number; mirrored?: boolean }) => (
+  <div
+    aria-hidden="true"
+    className={`pointer-events-none absolute inset-y-0 hidden sm:block w-[150px] lg:w-[230px] ${
+      mirrored ? "right-0 -scale-x-100" : "left-0"
+    }`}
+    style={{ opacity: "calc(0.16 + 0.84 * var(--boot-p, 0))" }}
+  >
+    {/* bus spine — dim track */}
+    <div className="absolute inset-y-0 left-4 w-px bg-primary/20" />
 
-  return (
+    {/* bus spine — energised fill, tracks the loader */}
     <div
-      aria-hidden="true"
-      className={`pointer-events-none absolute inset-y-0 hidden sm:block w-[150px] lg:w-[230px] ${
-        mirrored ? "right-0 -scale-x-100" : "left-0"
-      }`}
-      style={{ opacity: 0.16 + 0.84 * p }}
-    >
-      {/* bus spine — dim track */}
-      <div className="absolute inset-y-0 left-4 w-px bg-primary/20" />
+      className="absolute top-0 left-4 w-px bg-primary"
+      style={{
+        height: "calc(var(--boot-p, 0) * 100%)",
+        boxShadow:
+          "0 0 calc(4px + 10px * var(--boot-p, 0)) hsl(var(--primary) / calc(0.4 + 0.5 * var(--boot-p, 0)))",
+      }}
+    />
 
-      {/* bus spine — energised fill, tracks the loader */}
-      <div
-        className="absolute top-0 left-4 w-px bg-primary will-change-[height]"
-        style={{
-          height: `${progress}%`,
-          boxShadow: `0 0 ${4 + 10 * p}px hsl(var(--primary) / ${0.4 + 0.5 * p})`,
-        }}
-      />
+    {/* travelling data pulse */}
+    <div className="absolute left-4 -ml-[2px] w-[5px] h-[5px] bg-primary boot-pulse-travel" />
 
-      {/* travelling data pulse */}
-      <div className="absolute left-4 -ml-[2px] w-[5px] h-[5px] bg-primary boot-pulse-travel" />
-
-      {NODES.map((n, i) => {
-        const lit = progress >= n.at;
-        const top = 4 + i * 6.4;
-        return (
-          <div key={i} className="absolute" style={{ top: `${top}%`, left: "1rem" }}>
-            {/* branch trace */}
-            <div
-              className="absolute top-1/2 h-px origin-left transition-[width,background-color] duration-500 ease-out"
-              style={{
-                width: lit ? n.len : 6,
-                background: lit ? "hsl(var(--primary) / 0.75)" : "hsl(var(--primary) / 0.18)",
-              }}
-            />
-            {/* node */}
-            <div
-              className="absolute -translate-y-1/2 rotate-45 transition-all duration-500 ease-out"
-              style={{
-                left: lit ? n.len : 6,
-                width: n.size,
-                height: n.size,
-                background: lit ? "hsl(var(--primary))" : "transparent",
-                border: `1px solid hsl(var(--primary) / ${lit ? 1 : 0.25})`,
-                boxShadow: lit ? `0 0 ${5 + 12 * p}px hsl(var(--primary) / ${0.5 + 0.5 * p})` : "none",
-              }}
-            />
-            {/* hex tag appears once energised */}
-            <span
-              className="absolute top-1/2 -translate-y-1/2 font-pixel text-[6px] tracking-widest text-primary/70 transition-opacity duration-500"
-              style={{
-                left: lit ? n.len + n.size + 6 : n.len,
-                opacity: lit ? 1 : 0,
-                transform: mirrored ? "translateY(-50%) scaleX(-1)" : undefined,
-              }}
-            >
-              {n.tag}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-});
+    {NODES.map((n, i) => {
+      const on = i < lit;
+      const top = 4 + i * 6.4;
+      return (
+        <div key={i} className="absolute" style={{ top: `${top}%`, left: "1rem" }}>
+          {/* branch trace */}
+          <div
+            className="absolute top-1/2 h-px origin-left transition-[width,background-color] duration-500 ease-out"
+            style={{
+              width: on ? n.len : 6,
+              background: on ? "hsl(var(--primary) / 0.75)" : "hsl(var(--primary) / 0.18)",
+            }}
+          />
+          {/* node */}
+          <div
+            className="absolute -translate-y-1/2 rotate-45 transition-all duration-500 ease-out"
+            style={{
+              left: on ? n.len : 6,
+              width: n.size,
+              height: n.size,
+              background: on ? "hsl(var(--primary))" : "transparent",
+              border: `1px solid hsl(var(--primary) / ${on ? 1 : 0.25})`,
+              boxShadow: on
+                ? "0 0 calc(5px + 12px * var(--boot-p, 0)) hsl(var(--primary) / calc(0.5 + 0.5 * var(--boot-p, 0)))"
+                : "none",
+            }}
+          />
+          {/* hex tag appears once energised */}
+          <span
+            className="absolute top-1/2 -translate-y-1/2 font-pixel text-[6px] tracking-widest text-primary/70 transition-opacity duration-500"
+            style={{
+              left: on ? n.len + n.size + 6 : n.len,
+              opacity: on ? 1 : 0,
+              transform: mirrored ? "translateY(-50%) scaleX(-1)" : undefined,
+            }}
+          >
+            {n.tag}
+          </span>
+        </div>
+      );
+    })}
+  </div>
+));
 NodeColumn.displayName = "NodeColumn";
+
+const SEGMENTS = 32;
+
+/** The segmented loader. Memoised on the lit count so it reconciles 32 times
+ *  rather than on every animation frame. */
+const LoaderBar = memo(({ litSegments }: { litSegments: number }) => (
+  <div className="flex gap-[3px]">
+    {Array.from({ length: SEGMENTS }).map((_, i) => {
+      const on = i < litSegments;
+      return (
+        <span
+          key={i}
+          className="h-2.5 flex-1 transition-colors duration-150"
+          style={{
+            background: on ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.12)",
+            boxShadow: on && i >= litSegments - 3 ? "0 0 8px hsl(var(--primary) / 0.8)" : "none",
+          }}
+        />
+      );
+    })}
+  </div>
+));
+LoaderBar.displayName = "LoaderBar";
 
 /* ---------- boot screen ---------- */
 
@@ -116,6 +143,7 @@ const BootScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [revealed, setRevealed] = useState(0);
   const [progress, setProgress] = useState(0);
   const [done, setDone] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
 
@@ -131,6 +159,7 @@ const BootScreen = ({ onComplete }: { onComplete: () => void }) => {
 
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
+      rootRef.current?.style.setProperty("--boot-p", "1");
       setRevealed(totalChars);
       setProgress(100);
       const t = window.setTimeout(() => {
@@ -147,6 +176,12 @@ const BootScreen = ({ onComplete }: { onComplete: () => void }) => {
 
     const frame = (now: number) => {
       const e = Math.min(1, (now - start) / TYPE_MS);
+
+      /* The glow and spine ride on a custom property, so the smooth part of
+         the animation costs one style write instead of a React pass over the
+         ~190 elements in the two node columns. */
+      rootRef.current?.style.setProperty("--boot-p", e.toFixed(3));
+
       setRevealed(Math.round(e * totalChars));
       setProgress(Math.round(e * 100));
 
@@ -181,11 +216,12 @@ const BootScreen = ({ onComplete }: { onComplete: () => void }) => {
   }, [revealed]);
 
   const pct = progress / 100;
-  const SEGMENTS = 32;
   const litSegments = Math.round(pct * SEGMENTS);
+  const litNodes = NODES.filter((n) => progress >= n.at).length;
 
   return (
     <div
+      ref={rootRef}
       className="fixed inset-0 z-[10000] bg-background flex items-center justify-center overflow-hidden"
       style={{
         opacity: done ? 0 : 1,
@@ -198,13 +234,13 @@ const BootScreen = ({ onComplete }: { onComplete: () => void }) => {
         style={{
           background:
             "radial-gradient(ellipse at 50% 45%, hsl(var(--primary) / 0.10), transparent 62%)",
-          opacity: 0.25 + 0.75 * pct,
+          opacity: "calc(0.25 + 0.75 * var(--boot-p, 0))",
         }}
       />
       <div className="crt-overlay" />
 
-      <NodeColumn progress={progress} />
-      <NodeColumn progress={progress} mirrored />
+      <NodeColumn lit={litNodes} />
+      <NodeColumn lit={litNodes} mirrored />
 
       {/* console */}
       <div className="relative w-full max-w-xl px-6">
@@ -244,26 +280,7 @@ const BootScreen = ({ onComplete }: { onComplete: () => void }) => {
 
             {/* segmented loader */}
             <div className="px-5 pb-4">
-              <div className="flex gap-[3px]">
-                {Array.from({ length: SEGMENTS }).map((_, i) => {
-                  const on = i < litSegments;
-                  return (
-                    <span
-                      key={i}
-                      className="h-2.5 flex-1 transition-colors duration-150"
-                      style={{
-                        background: on
-                          ? "hsl(var(--primary))"
-                          : "hsl(var(--primary) / 0.12)",
-                        boxShadow:
-                          on && i >= litSegments - 3
-                            ? "0 0 8px hsl(var(--primary) / 0.8)"
-                            : "none",
-                      }}
-                    />
-                  );
-                })}
-              </div>
+              <LoaderBar litSegments={litSegments} />
 
               <div className="mt-2 flex items-center justify-between font-terminal text-xs">
                 <span className="text-muted-foreground">

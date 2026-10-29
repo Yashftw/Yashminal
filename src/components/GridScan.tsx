@@ -1,4 +1,3 @@
-import * as faceapi from "face-api.js";
 import {
   BloomEffect,
   ChromaticAberrationEffect,
@@ -9,6 +8,16 @@ import {
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import "./GridScan.css";
+
+/* face-api.js is ~700kB of the bundle and is only needed when `enableWebcam`
+   is on (it is off by default). Pull it in on demand so the first paint does
+   not pay for a model runtime nobody asked for. */
+type FaceApi = typeof import("face-api.js");
+let faceApiPromise: Promise<FaceApi> | null = null;
+const loadFaceApi = (): Promise<FaceApi> => {
+  faceApiPromise ??= import("face-api.js");
+  return faceApiPromise;
+};
 
 const vert = `
 varying vec2 vUv;
@@ -301,7 +310,17 @@ type GridScanProps = {
   scanDelay?: number;
   enableGyro?: boolean;
   scanOnClick?: boolean;
+  /** Parallax follows the pointer. Turn off for a wallpaper that ignores the mouse. */
+  mouseReactive?: boolean;
   snapBackDelay?: number;
+  /** Upper bound on devicePixelRatio. A soft background grid gains nothing
+   *  from a retina backing store but pays for every extra pixel. */
+  maxPixelRatio?: number;
+  /** Renders the shader below CSS resolution and lets the compositor scale it
+   *  up. Cost falls with the square of this, so 0.75 is ~44% fewer pixels. */
+  renderScale?: number;
+  /** Frame cap for the background loop. 0 disables the cap. */
+  maxFps?: number;
   className?: string;
   style?: React.CSSProperties;
 };
@@ -331,8 +350,12 @@ export const GridScan = ({
   scanDuration = 2.0,
   scanDelay = 2.0,
   enableGyro = false,
+  mouseReactive = true,
   scanOnClick = false,
   snapBackDelay = 250,
+  maxPixelRatio = 1,
+  renderScale = 0.75,
+  maxFps = 30,
   className,
   style,
 }: GridScanProps) => {
@@ -345,6 +368,7 @@ export const GridScan = ({
   const bloomRef = useRef<BloomEffect | null>(null);
   const chromaRef = useRef<ChromaticAberrationEffect | null>(null);
   const rafRef = useRef<number | null>(null);
+  const faceApiRef = useRef<FaceApi | null>(null);
 
   const [modelsReady, setModelsReady] = useState(false);
   const [uiFaceActive, setUiFaceActive] = useState(false);
@@ -382,6 +406,11 @@ export const GridScan = ({
   const bufT = useRef<number[]>([]);
   const bufYaw = useRef<number[]>([]);
 
+  /* Which passes the pipeline needs — not their strength, which the uniform
+     sync effect below can change without a rebuild. */
+  const needsBloom = bloomIntensity > 0;
+  const needsChroma = chromaticAberration > 0;
+
   const s = THREE.MathUtils.clamp(sensitivity, 0, 1);
   const skewScale = THREE.MathUtils.lerp(0.06, 0.2, s);
   const tiltScale = THREE.MathUtils.lerp(0.12, 0.3, s);
@@ -395,6 +424,10 @@ export const GridScan = ({
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    /* The canvas sits behind the page at `pointer-events: none`, so it is
+       never a hit-test target and listeners bound to it would never fire.
+       The parallax tracks the pointer anywhere over the document instead. */
+    const target: Window = window;
     let leaveTimer: number | null = null;
     const onMove = (e: MouseEvent) => {
       if (uiFaceActive) return;
@@ -402,9 +435,8 @@ export const GridScan = ({
         window.clearTimeout(leaveTimer);
         leaveTimer = null;
       }
-      const rect = el.getBoundingClientRect();
-      const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const ny = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+      const nx = (e.clientX / window.innerWidth) * 2 - 1;
+      const ny = -((e.clientY / window.innerHeight) * 2 - 1);
       lookTarget.current.set(nx, ny);
     };
     const onClick = async () => {
@@ -434,26 +466,41 @@ export const GridScan = ({
         yawTarget.current = 0;
       }, Math.max(0, snapBackDelay || 0));
     };
-    el.addEventListener("mousemove", onMove);
-    el.addEventListener("mouseenter", onEnter);
-    if (scanOnClick) el.addEventListener("click", onClick);
-    el.addEventListener("mouseleave", onLeave);
+    if (mouseReactive) target.addEventListener("mousemove", onMove, { passive: true });
+    document.documentElement.addEventListener("mouseenter", onEnter);
+    if (scanOnClick) target.addEventListener("click", onClick);
+    document.documentElement.addEventListener("mouseleave", onLeave);
     return () => {
-      el.removeEventListener("mousemove", onMove);
-      el.removeEventListener("mouseenter", onEnter);
-      el.removeEventListener("mouseleave", onLeave);
-      if (scanOnClick) el.removeEventListener("click", onClick);
+      target.removeEventListener("mousemove", onMove);
+      document.documentElement.removeEventListener("mouseenter", onEnter);
+      document.documentElement.removeEventListener("mouseleave", onLeave);
+      if (scanOnClick) target.removeEventListener("click", onClick);
       if (leaveTimer) window.clearTimeout(leaveTimer);
     };
-  }, [uiFaceActive, snapBackDelay, scanOnClick, enableGyro]);
+  }, [uiFaceActive, snapBackDelay, scanOnClick, enableGyro, mouseReactive]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    /* The stylesheet hides this layer under reduced motion, but a hidden
+       canvas still costs a full shader pass per frame — so don't start one. */
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+
+    /* This is a full-screen procedural shader: every pixel costs real GPU
+       time, so the backing store — not the geometry — is the whole budget.
+       `antialias` would allocate an MSAA buffer that the shader's own
+       fwidth-based edge softening already makes redundant. */
+    const renderer = new THREE.WebGLRenderer({
+      antialias: false,
+      alpha: true,
+      powerPreference: "high-performance",
+      depth: false,
+      stencil: false,
+    });
     rendererRef.current = renderer;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    const basePixelRatio = Math.min(window.devicePixelRatio || 1, maxPixelRatio);
+    renderer.setPixelRatio(basePixelRatio * renderScale);
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.NoToneMapping;
@@ -503,27 +550,40 @@ export const GridScan = ({
     const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
     scene.add(quad);
 
-    if (enablePost) {
+    /* Bloom is a multi-pass downsample/upsample blur over the whole frame —
+       easily the most expensive thing here. At zero intensity it blends
+       nothing, so building it would cost a full blur chain per frame to
+       composite an invisible result. Only pay for effects that actually
+       show up, and skip the composer entirely when none do. */
+    if (enablePost && (needsBloom || needsChroma)) {
       const composer = new EffectComposer(renderer);
       composerRef.current = composer;
       composer.addPass(new RenderPass(scene, camera));
 
-      const bloom = new BloomEffect({
-        intensity: 1.0,
-        luminanceThreshold: bloomThreshold,
-        luminanceSmoothing: bloomSmoothing,
-      });
-      bloom.blendMode.opacity.value = Math.max(0, bloomIntensity);
-      bloomRef.current = bloom;
+      const effects: (BloomEffect | ChromaticAberrationEffect)[] = [];
 
-      const chroma = new ChromaticAberrationEffect({
-        offset: new THREE.Vector2(chromaticAberration, chromaticAberration),
-        radialModulation: true,
-        modulationOffset: 0.0,
-      });
-      chromaRef.current = chroma;
+      if (needsBloom) {
+        const bloom = new BloomEffect({
+          intensity: 1.0,
+          luminanceThreshold: bloomThreshold,
+          luminanceSmoothing: bloomSmoothing,
+        });
+        bloom.blendMode.opacity.value = Math.max(0, bloomIntensity);
+        bloomRef.current = bloom;
+        effects.push(bloom);
+      }
 
-      const effectPass = new EffectPass(camera, bloom, chroma);
+      if (needsChroma) {
+        const chroma = new ChromaticAberrationEffect({
+          offset: new THREE.Vector2(chromaticAberration, chromaticAberration),
+          radialModulation: true,
+          modulationOffset: 0.0,
+        });
+        chromaRef.current = chroma;
+        effects.push(chroma);
+      }
+
+      const effectPass = new EffectPass(camera, ...effects);
       effectPass.renderToScreen = true;
       composer.addPass(effectPass);
     }
@@ -539,15 +599,23 @@ export const GridScan = ({
     };
     window.addEventListener("resize", onResize);
 
+    /* This is ambient scenery, not gameplay: it reads identically at 30fps
+       and leaves the other half of every frame's budget to the page itself. */
+    const minFrameMs = maxFps > 0 ? 1000 / maxFps - 1 : 0;
+
     let last = performance.now();
+    let lastDraw = 0;
     const tick = () => {
+      rafRef.current = requestAnimationFrame(tick);
+
       const now = performance.now();
+      if (now - lastDraw < minFrameMs) return;
+
       const dt = Math.max(0, Math.min(0.1, (now - last) / 1000));
       last = now;
+      lastDraw = now;
 
-      lookCurrent.current.copy(
-        smoothDampVec2(lookCurrent.current, lookTarget.current, lookVel.current, smoothTime, maxSpeed, dt)
-      );
+      smoothDampVec2(lookCurrent.current, lookTarget.current, lookVel.current, smoothTime, maxSpeed, dt);
 
       const tiltSm = smoothDampFloat(tiltCurrent.current, tiltTarget.current, { v: tiltVel.current }, smoothTime, maxSpeed, dt);
       tiltCurrent.current = tiltSm.value;
@@ -557,8 +625,10 @@ export const GridScan = ({
       yawCurrent.current = yawSm.value;
       yawVel.current = yawSm.v;
 
-      const skew = new THREE.Vector2(lookCurrent.current.x * skewScale, -lookCurrent.current.y * yBoost * skewScale);
-      (material.uniforms.uSkew.value as THREE.Vector2).set(skew.x, skew.y);
+      (material.uniforms.uSkew.value as THREE.Vector2).set(
+        lookCurrent.current.x * skewScale,
+        -lookCurrent.current.y * yBoost * skewScale
+      );
       material.uniforms.uTilt.value = tiltCurrent.current * tiltScale;
       material.uniforms.uYaw.value = THREE.MathUtils.clamp(yawCurrent.current * yawScale, -0.6, 0.6);
 
@@ -566,43 +636,52 @@ export const GridScan = ({
       renderer.clear(true, true, true);
       if (composerRef.current) composerRef.current.render(dt);
       else renderer.render(scene, camera);
-
-      rafRef.current = requestAnimationFrame(tick);
     };
+
+    /* A background tab still gets rAF callbacks in some browsers, and the
+       scan animation is time-based, so stopping the loop also keeps the
+       clock from jumping when the tab comes back. */
+    const onVisibility = () => {
+      if (document.hidden) {
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      } else if (rafRef.current === null) {
+        last = performance.now();
+        lastDraw = 0;
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
     rafRef.current = requestAnimationFrame(tick);
 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("resize", onResize);
       material.dispose();
       quad.geometry.dispose();
       composerRef.current?.dispose();
       composerRef.current = null;
+      bloomRef.current = null;
+      chromaRef.current = null;
       renderer.dispose();
       renderer.forceContextLoss();
       container.removeChild(renderer.domElement);
     };
+    /* Deliberately narrow. Everything the effect below can push straight into
+       a uniform is left out, because listing it here would tear down the GL
+       context and rebuild every pass just to change a colour. Only values
+       baked into the pipeline's *shape* — which passes exist, how big the
+       buffers are, the closure's motion constants — belong in this list. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    sensitivity,
-    lineThickness,
-    linesColor,
-    scanColor,
-    scanOpacity,
-    gridScale,
-    lineStyle,
-    lineJitter,
-    scanDirection,
     enablePost,
-    noiseIntensity,
-    bloomIntensity,
-    scanGlow,
-    scanSoftness,
-    scanPhaseTaper,
-    scanDuration,
-    scanDelay,
-    bloomThreshold,
-    bloomSmoothing,
-    chromaticAberration,
+    needsBloom,
+    needsChroma,
+    maxPixelRatio,
+    renderScale,
+    maxFps,
     smoothTime,
     maxSpeed,
     skewScale,
@@ -681,6 +760,9 @@ export const GridScan = ({
     let canceled = false;
     const load = async () => {
       try {
+        const faceapi = await loadFaceApi();
+        if (canceled) return;
+        faceApiRef.current = faceapi;
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri(modelsPath),
           faceapi.nets.faceLandmark68TinyNet.loadFromUri(modelsPath),
@@ -704,6 +786,8 @@ export const GridScan = ({
     const start = async () => {
       if (!enableWebcam || !modelsReady) return;
       if (!video) return;
+      const faceapi = faceApiRef.current;
+      if (!faceapi) return;
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -817,6 +901,9 @@ function srgbColor(hex: string) {
   return c.convertSRGBToLinear();
 }
 
+/** Smooth-damps `current` toward `target` in place.
+ *  Runs once per frame, so it works on scalars rather than allocating a
+ *  handful of throwaway Vector2s each time. */
 function smoothDampVec2(
   current: THREE.Vector2,
   target: THREE.Vector2,
@@ -825,32 +912,47 @@ function smoothDampVec2(
   maxSpeed: number,
   deltaTime: number
 ) {
-  const out = current.clone();
-  let smoothTime = Math.max(0.0001, smoothTimeIn);
+  const smoothTime = Math.max(0.0001, smoothTimeIn);
   const omega = 2 / smoothTime;
   const x = omega * deltaTime;
   const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
 
-  let change = current.clone().sub(target);
-  const originalTo = target.clone();
+  const curX = current.x;
+  const curY = current.y;
+  const toX = target.x;
+  const toY = target.y;
+
+  let changeX = curX - toX;
+  let changeY = curY - toY;
 
   const maxChange = maxSpeed * smoothTime;
-  if (change.length() > maxChange) change.setLength(maxChange);
+  const changeLen = Math.hypot(changeX, changeY);
+  if (changeLen > maxChange && changeLen > 0) {
+    const k = maxChange / changeLen;
+    changeX *= k;
+    changeY *= k;
+  }
 
-  const clippedTarget = current.clone().sub(change);
-  const temp = currentVelocity.clone().addScaledVector(change, omega).multiplyScalar(deltaTime);
-  currentVelocity.sub(temp.clone().multiplyScalar(omega));
-  currentVelocity.multiplyScalar(exp);
+  const clippedX = curX - changeX;
+  const clippedY = curY - changeY;
 
-  out.copy(clippedTarget.clone().add(change.add(temp).multiplyScalar(exp)));
+  const tempX = (currentVelocity.x + omega * changeX) * deltaTime;
+  const tempY = (currentVelocity.y + omega * changeY) * deltaTime;
 
-  const origMinusCurrent = originalTo.clone().sub(current);
-  const outMinusOrig = out.clone().sub(originalTo);
-  if (origMinusCurrent.dot(outMinusOrig) > 0) {
-    out.copy(originalTo);
+  currentVelocity.set((currentVelocity.x - omega * tempX) * exp, (currentVelocity.y - omega * tempY) * exp);
+
+  let outX = clippedX + (changeX + tempX) * exp;
+  let outY = clippedY + (changeY + tempY) * exp;
+
+  // Overshoot guard: snap to the target rather than oscillating past it.
+  if ((toX - curX) * (outX - toX) + (toY - curY) * (outY - toY) > 0) {
+    outX = toX;
+    outY = toY;
     currentVelocity.set(0, 0);
   }
-  return out;
+
+  current.set(outX, outY);
+  return current;
 }
 
 function smoothDampFloat(
@@ -861,7 +963,7 @@ function smoothDampFloat(
   maxSpeed: number,
   deltaTime: number
 ) {
-  let smoothTime = Math.max(0.0001, smoothTimeIn);
+  const smoothTime = Math.max(0.0001, smoothTimeIn);
   const omega = 2 / smoothTime;
   const x = omega * deltaTime;
   const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);

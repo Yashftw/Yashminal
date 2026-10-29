@@ -21,6 +21,14 @@
   <meta name="twitter:card" content="summary_large_image">
 </head>
   <body>
+    <script>
+      // Apply the saved theme before first paint; React mounts too late to
+      // avoid a flash of the wrong one.
+      try {
+        var t = localStorage.getItem("crimson-theme");
+        if (!t || t === "dark") document.documentElement.classList.add("dark");
+      } catch (e) {}
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
