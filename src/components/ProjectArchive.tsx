@@ -110,6 +110,19 @@ const projects: Project[] = [
     icon: "☾",
     sysLabel: "NIGHT.SYS",
   },
+  {
+    id: "PROJ_08",
+    name: "TUBESHELF",
+    status: "STABLE",
+    techStack: ["JavaScript", "HTML", "CSS", "Chrome Extension (MV3)"],
+    description: "A Chrome extension that saves YouTube videos into a categorized, in-browser library.",
+    details: "Manifest V3 extension with a lightweight popup, content script, and background service worker. Videos are sorted into Project, Study, and Watch Later shelves and kept in persistent browser storage, replacing scattered bookmarks and notes.",
+    githubUrl: "https://github.com/Yashftw/TubeShelf",
+    image: "/projects/tubeshelf.png",
+    accent: "0 85% 60%",
+    icon: "▶",
+    sysLabel: "SHELF.EXT",
+  },
 ];
 
 const ProjectShot = ({ project }: { project: Project }) => {
