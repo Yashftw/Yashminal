@@ -11,6 +11,7 @@ interface Project {
   details: string;
   githubUrl?: string;
   websiteUrl?: string;
+  image?: string; // main-screen screenshot, served from /public/projects
   accent: string; // HSL triplet, e.g. "270 85% 60%"
   icon: string;
   sysLabel: string;
@@ -26,6 +27,7 @@ const projects: Project[] = [
     details: "Automated PDF-to-flashcard generation using Gemini AI, with spaced repetition scheduling for optimal learning.",
     githubUrl: "https://github.com/Yashftw/Brainblox",
     websiteUrl: "https://pixel-perfect-vision-cuemath-flashc-opal.vercel.app/",
+    image: "/projects/brainblox.png",
     accent: "270 85% 65%",
     icon: "⌬",
     sysLabel: "NEURAL.SYS",
@@ -37,6 +39,7 @@ const projects: Project[] = [
     techStack: ["Odoo", "Generative AI", "Google Cloud"],
     description: "An Odoo-connected GenAI assistant built on Google Cloud. Project details coming soon.",
     details: "Project details will be added soon.",
+    image: "/projects/odoo-genai.png",
     accent: "245 75% 68%",
     icon: "✦",
     sysLabel: "ODOO.GENAI",
@@ -50,6 +53,7 @@ const projects: Project[] = [
     details: "Allows users to connect and resolve hardware/software issues via live communication tools.",
     githubUrl: "https://github.com/Yashftw/Helpmefixit-production",
     websiteUrl: "https://helpmefixit-production.vercel.app/",
+    image: "/projects/helpmefixit.webp",
     accent: "35 92% 58%",
     icon: "⚙",
     sysLabel: "REPAIR.SYS",
@@ -62,6 +66,7 @@ const projects: Project[] = [
     description: "Decoupled serverless document processing pipeline with automated extraction and confidence scoring.",
     details: "Event-driven architecture on AWS using Step Functions, S3, Textract OCR, and Gemini AI. Features Pydantic schema validation, human-in-the-loop review queues, and Le'Blanc document QA assistant.",
     githubUrl: "https://github.com/Yashftw/Serverless-document-intelligence-pipeline",
+    image: "/projects/docintel.png",
     accent: "160 84% 45%",
     icon: "⚡",
     sysLabel: "DOCINTEL.SYS",
@@ -74,6 +79,7 @@ const projects: Project[] = [
     description: "Privacy-focused local Retrieval-Augmented Generation assistant running on consumer hardware.",
     details: "Local RAG pipeline leveraging quantized LLMs and vector embeddings for semantic document search, achieving sub-second inference latency with zero cloud dependency.",
     githubUrl: "https://github.com/Yashftw",
+    image: "/projects/local-rag.png",
     accent: "185 85% 55%",
     icon: "⬡",
     sysLabel: "LOCAL.RAG",
@@ -85,11 +91,49 @@ const projects: Project[] = [
     techStack: ["Azure", "AWS", "GCP", "React", "Node.js"],
     description: "Cost visibility dashboard aggregating spend across Azure/AWS/GCP with anomaly signals.",
     details: "Architecture: REST-based aggregation service + dashboard UI; structured data pipeline for cross-cloud normalization and monthly trend analysis.",
+    image: "/projects/cloud-cost.png",
     accent: "197 100% 50%",
     icon: "☁",
     sysLabel: "LEDGER.SYS",
   },
+  {
+    id: "PROJ_07",
+    name: "3AM",
+    status: "STABLE",
+    techStack: ["React", "TypeScript", "Tailwind", "Framer Motion", "Firebase", "PWA"],
+    description: "A minimalist, dark-mode-native personal tracker for tasks, goals, money, and health.",
+    details: "Installable PWA with offline-first caching. Firebase Auth and Firestore sync data across devices; tracks todos and long-term goals, expenses against category budgets, and sleep and workout metrics with arc gauges and activity heatmaps. Opt-in push notifications for weekly digests.",
+    githubUrl: "https://github.com/Yashftw/3am",
+    websiteUrl: "https://3am-seven.vercel.app/",
+    image: "/projects/3am.webp",
+    accent: "330 80% 66%",
+    icon: "☾",
+    sysLabel: "NIGHT.SYS",
+  },
 ];
+
+const ProjectShot = ({ project }: { project: Project }) => {
+  const [failed, setFailed] = useState(false);
+  if (!project.image || failed) return null;
+  return (
+    <div
+      className="relative border-b-2 border-border overflow-hidden bg-background"
+      style={{ borderColor: `hsl(${project.accent} / 0.45)` }}
+    >
+      <img
+        src={project.image}
+        alt={`${project.name} main screen`}
+        loading="lazy"
+        onError={() => setFailed(true)}
+        className="block w-full aspect-video object-cover object-top"
+      />
+      <span
+        className="pointer-events-none absolute inset-0"
+        style={{ background: `linear-gradient(180deg, transparent 65%, hsl(${project.accent} / 0.18))` }}
+      />
+    </div>
+  );
+};
 
 const statusColor: Record<string, string> = {
   STABLE: "text-crimson-glow",
@@ -263,6 +307,8 @@ const ProjectArchive = () => {
                 ✕
               </button>
             </div>
+
+            <ProjectShot key={selected.id} project={selected} />
 
             <div className="p-5 space-y-4">
               <div>
