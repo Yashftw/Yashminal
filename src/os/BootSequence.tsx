@@ -21,7 +21,7 @@ interface PostLine {
 }
 
 const POST_LINES: PostLine[] = [
-  { at: 0, text: "YASHMINAL BIOS v2.6.1 — (C) 2026 YASHFTW SYSTEMS", tone: "head", beep: 1000 },
+  { at: 0, text: "YASHMINAL BIOS v2.6.1 - (C) 2026 YASHFTW SYSTEMS", tone: "head", beep: 1000 },
   { at: 260, text: "CPU : NEON-CORE X9 @ 4.20 GHz ................ OK" },
   { at: 480, text: "BIOS DATE : 10/26/26   BUILD : GLITCH-STABLE", tone: "dim" },
   { at: 760, text: "@MEM" },
@@ -219,7 +219,7 @@ const BootSequence = ({ onDone, startAt = "off", notice }: Props) => {
           <p className="font-pixel text-[10px] tracking-[0.3em] text-primary/80 boot-blink">
             PRESS POWER TO BOOT
           </p>
-          <p className="font-terminal text-sm text-muted-foreground">(sound on — turn your volume up)</p>
+          <p className="font-terminal text-sm text-muted-foreground">(sound on - turn your volume up)</p>
         </div>
       )}
 

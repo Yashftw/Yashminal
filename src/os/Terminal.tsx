@@ -83,7 +83,7 @@ const Terminal = ({ os }: { os: OSApi }) => {
       } else say(`open: no such app "${rest[0] ?? ""}". Try "ls".`);
     } else if (name === "ls" || name === "dir")
       say(...Object.keys(OPENERS).map((k) => `  ${k}.exe`), "  terminal.exe");
-    else if (name === "whoami") say("yashraj yadav (yashftw) — cloud engineer in training");
+    else if (name === "whoami") say("yashraj yadav (yashftw) - cloud engineer in training");
     else if (name === "yashftw")
       say("NAME: YASHRAJ YADAV", "ALIAS: YASHFTW", "CLASS: CLOUD ENGINEER IN TRAINING", "STATUS: ACTIVE AND GROWING");
     else if (name === "whatabtme") say("One good looking fella.");

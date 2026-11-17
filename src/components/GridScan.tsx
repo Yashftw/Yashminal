@@ -406,7 +406,7 @@ export const GridScan = ({
   const bufT = useRef<number[]>([]);
   const bufYaw = useRef<number[]>([]);
 
-  /* Which passes the pipeline needs — not their strength, which the uniform
+  /* Which passes the pipeline needs - not their strength, which the uniform
      sync effect below can change without a rebuild. */
   const needsBloom = bloomIntensity > 0;
   const needsChroma = chromaticAberration > 0;
@@ -484,11 +484,11 @@ export const GridScan = ({
     if (!container) return;
 
     /* The stylesheet hides this layer under reduced motion, but a hidden
-       canvas still costs a full shader pass per frame — so don't start one. */
+       canvas still costs a full shader pass per frame - so don't start one. */
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
 
     /* This is a full-screen procedural shader: every pixel costs real GPU
-       time, so the backing store — not the geometry — is the whole budget.
+       time, so the backing store - not the geometry - is the whole budget.
        `antialias` would allocate an MSAA buffer that the shader's own
        fwidth-based edge softening already makes redundant. */
     const renderer = new THREE.WebGLRenderer({
@@ -550,7 +550,7 @@ export const GridScan = ({
     const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
     scene.add(quad);
 
-    /* Bloom is a multi-pass downsample/upsample blur over the whole frame —
+    /* Bloom is a multi-pass downsample/upsample blur over the whole frame -
        easily the most expensive thing here. At zero intensity it blends
        nothing, so building it would cost a full blur chain per frame to
        composite an invisible result. Only pay for effects that actually
@@ -672,8 +672,8 @@ export const GridScan = ({
     /* Deliberately narrow. Everything the effect below can push straight into
        a uniform is left out, because listing it here would tear down the GL
        context and rebuild every pass just to change a colour. Only values
-       baked into the pipeline's *shape* — which passes exist, how big the
-       buffers are, the closure's motion constants — belong in this list. */
+       baked into the pipeline's *shape* - which passes exist, how big the
+       buffers are, the closure's motion constants - belong in this list. */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     enablePost,

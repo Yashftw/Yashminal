@@ -216,7 +216,7 @@
   animation: screen-glitch 0.1s ease-in-out;
 }
 
-/* Smooth hover lift (formerly a jitter shake — kept the class name so existing markup upgrades for free) */
+/* Smooth hover lift (formerly a jitter shake - kept the class name so existing markup upgrades for free) */
 .hover-shake {
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -248,7 +248,7 @@
 }
 
 /* Modern utility: smooth lift, for cards/tiles/buttons.
-   Transform only — box-shadow would be clipped away by the HUD frames. */
+   Transform only - box-shadow would be clipped away by the HUD frames. */
 .lift-hover {
   transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease;
 }
@@ -678,7 +678,7 @@
 }
 
 /* =====================================================================
-   YASHMINAL OS — boot sequence, desktop, windows
+   YASHMINAL OS - boot sequence, desktop, windows
    ===================================================================== */
 
 /* ---- boot ---- */

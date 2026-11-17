@@ -6,7 +6,7 @@ const ThemeToggle = () => {
       const stored = localStorage.getItem("crimson-theme");
       return stored ? stored === "dark" : true;
     } catch {
-      // Private browsing / blocked storage — fall back to the default theme.
+      // Private browsing / blocked storage - fall back to the default theme.
       return true;
     }
   });

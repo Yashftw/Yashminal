@@ -32,16 +32,14 @@ const projects: Project[] = [
   },
   {
     id: "PROJ_02",
-    name: "3 AM PROGRESS TRACKER",
-    status: "STABLE",
-    techStack: ["React", "Firebase", "PWA"],
-    description: "A minimalist, dark-mode journal and expense tracking application.",
-    details: "Focuses on clean UI, budget management, and secure offline-capable data synchronization across devices.",
-    githubUrl: "https://github.com/Yashftw/3am",
-    websiteUrl: "https://3am-seven.vercel.app/",
+    name: "ODOO-CONNECTED GENAI ASSISTANT ON GOOGLE CLOUD",
+    status: "WORK IN PROGRESS",
+    techStack: ["Odoo", "Generative AI", "Google Cloud"],
+    description: "An Odoo-connected GenAI assistant built on Google Cloud. Project details coming soon.",
+    details: "Project details will be added soon.",
     accent: "245 75% 68%",
-    icon: "☾",
-    sysLabel: "NOCTURNE.SYS",
+    icon: "✦",
+    sysLabel: "ODOO.GENAI",
   },
   {
     id: "PROJ_03",
@@ -58,18 +56,30 @@ const projects: Project[] = [
   },
   {
     id: "PROJ_04",
-    name: "FACE AUTHENTICATION SYSTEM",
-    status: "OPERATIONAL",
-    techStack: ["Python", "OpenCV", "Machine Learning"],
-    description: "An AI-powered attendance system using facial recognition.",
-    details: "Automates attendance tracking with high accuracy face detection and matching models.",
-    githubUrl: "https://github.com/Yashftw/face-authentication-attendance-system",
-    accent: "142 70% 48%",
-    icon: "◉",
-    sysLabel: "OPTIC.SYS",
+    name: "SERVERLESS INTELLIGENCE DOCUMENT PIPELINE",
+    status: "STABLE",
+    techStack: ["AWS", "Step Functions", "Textract", "DynamoDB", "Python", "Gemini AI"],
+    description: "Decoupled serverless document processing pipeline with automated extraction and confidence scoring.",
+    details: "Event-driven architecture on AWS using Step Functions, S3, Textract OCR, and Gemini AI. Features Pydantic schema validation, human-in-the-loop review queues, and Le'Blanc document QA assistant.",
+    githubUrl: "https://github.com/Yashftw/Serverless-document-intelligence-pipeline",
+    accent: "160 84% 45%",
+    icon: "⚡",
+    sysLabel: "DOCINTEL.SYS",
   },
   {
     id: "PROJ_05",
+    name: "RAG BASED LOCAL AI",
+    status: "OPERATIONAL",
+    techStack: ["Python", "LangChain", "Ollama", "ChromaDB", "FastAPI"],
+    description: "Privacy-focused local Retrieval-Augmented Generation assistant running on consumer hardware.",
+    details: "Local RAG pipeline leveraging quantized LLMs and vector embeddings for semantic document search, achieving sub-second inference latency with zero cloud dependency.",
+    githubUrl: "https://github.com/Yashftw",
+    accent: "185 85% 55%",
+    icon: "⬡",
+    sysLabel: "LOCAL.RAG",
+  },
+  {
+    id: "PROJ_06",
     name: "MULTI CLOUD COST DASHBOARD",
     status: "WORK IN PROGRESS",
     techStack: ["Azure", "AWS", "GCP", "React", "Node.js"],
@@ -244,7 +254,7 @@ const ProjectArchive = () => {
             >
               <span className="font-pixel text-[10px] tracking-wider flex items-center gap-2" style={{ color: `hsl(${selected.accent})` }}>
                 <span className="text-base leading-none">{selected.icon}</span>
-                {selected.id} — DETAILS
+                {selected.id} - DETAILS
               </span>
               <button
                 onClick={() => setSelected(null)}

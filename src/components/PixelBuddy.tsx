@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /* ============================================================
-   NYX — the archive's resident snow leopard.
+   NYX - the archive's resident snow leopard.
    Pixel art is generated on a 32x30 grid so every shape stays
    symmetric; only the face (eyes/mouth) swaps between frames.
    ============================================================ */
@@ -50,7 +50,7 @@ const EAR_OUTLINE = pairAll([
   [10, 6, 1, 2],
 ]);
 
-// Solid inner ear — a slim triangle, not a blob.
+// Solid inner ear - a slim triangle, not a blob.
 const EAR_FILL = pairAll([
   [6, 3, 1, 1],
   [5, 4, 3, 1],
@@ -376,7 +376,7 @@ const PixelBuddy = () => {
         onMouseEnter={onEnter}
         onMouseLeave={onLeave}
         onClick={onClick}
-        aria-label={`Nyx the archive buddy — ${frame.name.toLowerCase()}`}
+        aria-label={`Nyx the archive buddy - ${frame.name.toLowerCase()}`}
         className="interactive block bg-transparent creature-idle hud-glow"
         style={{ transform: `scaleX(${facing})` }}
       >

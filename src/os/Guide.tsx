@@ -10,7 +10,7 @@ import { TASKBAR_H, type Win } from "./Window";
 const INTRO: Record<string, string> = {
   home: "Welcome. Open any app and I'll explain it, once.",
   about: "This is the dossier on Yash: who he is, what he's studying and the face behind the handle.",
-  projects: "Five builds live in here. Hover a card and I'll tell you what it is, click to open its file.",
+  projects: "Six builds live in here. Hover a card and I'll tell you what it is, click to open its file.",
   skills: "Skill diagnostics: the tools and tech Yash works with, rated by how deep he's gone.",
   objectives: "Objectives: where Yash is heading and the capabilities he's building toward.",
   contact: "Want to hire him or just say hi? Fill this out and the message goes straight to his inbox.",

@@ -40,9 +40,9 @@ const NODES: NodeSpec[] = Array.from({ length: 15 }, (_, i) => {
 
 /** One column of cyber nodes.
  *
- *  Keyed on how many nodes are lit (0–15) rather than on raw progress, so it
+ *  Keyed on how many nodes are lit (0-15) rather than on raw progress, so it
  *  reconciles 15 times across the whole boot instead of once per frame. The
- *  continuous part — spine height, glow radius, column opacity — rides on the
+ *  continuous part - spine height, glow radius, column opacity - rides on the
  *  `--boot-p` custom property that the loop writes straight to the DOM, so it
  *  stays smooth without going through React at all. */
 const NodeColumn = memo(({ lit, mirrored }: { lit: number; mirrored?: boolean }) => (
@@ -53,10 +53,10 @@ const NodeColumn = memo(({ lit, mirrored }: { lit: number; mirrored?: boolean })
     }`}
     style={{ opacity: "calc(0.16 + 0.84 * var(--boot-p, 0))" }}
   >
-    {/* bus spine — dim track */}
+    {/* bus spine - dim track */}
     <div className="absolute inset-y-0 left-4 w-px bg-primary/20" />
 
-    {/* bus spine — energised fill, tracks the loader */}
+    {/* bus spine - energised fill, tracks the loader */}
     <div
       className="absolute top-0 left-4 w-px bg-primary"
       style={{
@@ -256,7 +256,7 @@ const BootScreen = ({ onComplete }: { onComplete: () => void }) => {
               </span>
             </div>
 
-            {/* Boot log. Height is fixed so the panel never jumps as lines land —
+            {/* Boot log. Height is fixed so the panel never jumps as lines land -
                 it must clear all 12 lines (12 × 16px × 1.45 ≈ 279px) plus padding. */}
             <div className="px-5 pt-4 pb-3 font-terminal text-base leading-[1.45] h-[312px] overflow-hidden">
               {visible.map((line, i) => (

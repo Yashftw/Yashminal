@@ -18,7 +18,7 @@ export function useTheme() {
     try {
       localStorage.setItem(KEY, dark ? "dark" : "light");
     } catch {
-      /* storage blocked — theme just won't persist */
+      /* storage blocked - theme just won't persist */
     }
   }, [dark]);
 
